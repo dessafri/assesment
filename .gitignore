@@ -29,5 +29,8 @@ user_guide_src/cilexer/pycilexer.egg-info/*
 /mvc/logs
 /main/sessions
 /mvc/cache/*
+/mvc/config/development/database.php
+/mvc/config/production/database.php
+/mvc/config/config.php
 .idea/itest.iml
 /rector.php
