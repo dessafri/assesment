@@ -672,7 +672,8 @@ class Take_exam extends Admin_Controller
                             }
                         }
 
-                        $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID, $user_options, $user_answer);
+                        $ref = uniqid();
+                        $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID, $user_options, $user_answer, $ref);
                         $this->question_level_report_m->insert_batch_question_level_report($resultAnswer);
                         $this->data['showResult']        = $givenTimes;
                         $this->data['fail']              = $f;

@@ -97,12 +97,13 @@
             var tr = $(this).closest('tr');
             var row = parentTable.row(tr);
             var dt = row.data();
+            // console.log(dt)
 
             if (row.child.isShown()) {
                 row.child.hide();
                 tr.removeClass('shown');
             } else {
-                row.child(formatDetails(dt[3])).show();
+                row.child(formatDetails(dt[4])).show();
                 tr.addClass('shown');
             }
         });

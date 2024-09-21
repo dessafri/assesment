@@ -44,7 +44,7 @@ class Question_level_report_m extends MY_Model
     {
         parent::delete($id);
     }
-    public function compute_jawaban($iduser,$idrelasi,$idexam,$user_options,$user_answer)
+    public function compute_jawaban($iduser,$idrelasi,$idexam,$user_options,$user_answer,$ref)
     {
         // $query = "SELECT c.levelID AS questionLevelID,c.groupID,a.relasi_jabatan AS userID,CASE
         // WHEN d.title = 'Atasan' THEN SUM(b.nilaijawaban) * 0.2
@@ -79,6 +79,7 @@ class Question_level_report_m extends MY_Model
         $results = $results->result_array();
         foreach ($results as $key => &$result) {
             $result['onlineExamUserAnswerID'] = $user_answer[$key];
+            $result['ref'] = $ref;
         }
         return $results;
     }
@@ -199,7 +200,7 @@ class Question_level_report_m extends MY_Model
             left join student s on s.studentID =q.userID 
             left join teacher t on t.teacherID =q.userID 
             left join systemadmin sy on sy.systemadminID =q.userID 
-            group by q.userID ,q.examID ";
+            group by q.userID ,q.ref ";
 
         $result = $this->db->query($query);
         return $result->result_array();     

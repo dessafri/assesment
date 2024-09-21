@@ -1388,6 +1388,7 @@ class Idcardreport extends Admin_Controller
         $this->db->trans_begin();
         try {
             $answer_ids = $option_ids = [];
+            $ref = uniqid();
             foreach ($data as $key => $value) {
                 $report = $this->question_level_report_m->get_single_data([
                     'questionLevelReportID' => $value['questionLevelReportID']
@@ -1438,6 +1439,7 @@ class Idcardreport extends Admin_Controller
                     'questionID' => $report->questionID,
                     'onlineExamUserAnswerOptionID' => $option_ids[$key],
                     'onlineExamUserAnswerID' => $answer_ids[$key],
+                    'ref'=>$ref,
                 ]);
             }
             
