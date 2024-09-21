@@ -318,9 +318,12 @@ class Idcardreport extends Admin_Controller
         $results = $this->question_level_report_m->get_parent();
         foreach ($results as $key => &$parent) {
             $childs = $this->question_level_report_m->get_child($parent['userID'], $parent['examID'], $parent['ids']);
+            $score = 0;
             foreach ($childs as $key => $child) {
                 $parent['detail'][$child['title']][] = $child;
+                $score += $child['mark'];
             }
+            $parent['score'] = $score;
         }
 
         $this->data['subtype'] = $types;

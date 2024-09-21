@@ -209,6 +209,7 @@ class Question_level_report_m extends MY_Model
         $query = "SELECT
             q.questionLevelReportID ,
             qb.levelID ,
+            qb.mark,
             qb.question,
             qb.groupID ,
             qg.title ,

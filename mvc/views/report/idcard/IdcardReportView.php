@@ -11,13 +11,14 @@
         <div class="row">
 
             <div class="col-sm-12">
-            <button class="button btn btn-primary"><a class="text-white" href="<?=base_url('idcardreport/getReport')?>">Print</a></button>
+            <!-- <button class="button btn btn-primary"><a class="text-white" href="<?=base_url('idcardreport/getReport')?>">Print</a></button> -->
             <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr>
                         <th width="2%">No</th>
                         <th width="50%">Nama</th>
-                        <th width="40%">Total Dijawab</th>
+                        <th width="20%">Total Dijawab</th>
+                        <th width="20%">Total Score</th>
                         <th class="hidden"></th>
                         <th >Action</th>
                     </tr>
@@ -30,6 +31,7 @@
                             <td data-title="id"><?php echo $i; ?></td>
                             <td data-title="namaKaryawan"><?=$result['name']?></td>
                             <td><?= $result['total'] ?></td>
+                            <td><?= $result['score'] ?></td>
                             <td class="hidden"><?=$key?></td>
                             <td>
                                 <button class="btn btn-primary showDetails"><i class="fa fa-eye"></i></button>
@@ -55,7 +57,42 @@
 <script>
     $(document).ready(function () {
         var results = <?php echo json_encode($results)?>;
-        var parentTable = $('#example1').DataTable();
+        var parentTable = $('#example1').DataTable({
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'copyHtml5',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'excelHtml5',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                },
+                {
+                    extend: 'csvHtml5',
+                    exportOptions: {
+                        columns: ':visible',
+                        format: {
+                        body: function(data, row, column, node) {
+                            // Customize data formatting
+                            // Example: Remove HTML tags and trim spaces
+                            return data.replace(/<.*?>/g, '').trim();
+                        }
+                    }
+                    }
+                },
+                {
+                    extend: 'pdfHtml5',
+                    exportOptions: {
+                        columns: ':visible'
+                    }
+                }
+            ],
+        });
         $('#example1 tbody').on('click', '.showDetails', function() {
             var tr = $(this).closest('tr');
             var row = parentTable.row(tr);
