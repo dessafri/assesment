@@ -2,7 +2,7 @@
         <header class="header">
             <a href="<?=base_url('dashboard/index'); ?>" class="logo">
                 <!-- <?php if(inicompute($siteinfos)) { echo namesorting($siteinfos->sname, 14); } ?> -->
-                <!-- <img src="<?php echo base_url('assets/images/logosmi.png'); ?>" alt="Deskripsi Gambar" width="100" height="60" style="margin:auto;display:block;"> -->
+                 <img src="<?php echo base_url('assets/images/logo_kejaksaan.png'); ?>" alt="Deskripsi Gambar" width="50" height="50" style="margin:auto;display:block;"> 
             </a>
             <!-- Header Navbar: style can be found in header.less -->
             <nav class="navbar navbar-static-top" role="navigation">
@@ -38,7 +38,7 @@
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                                 <img class="language-img" src="<?php 
                                 $image = $this->session->userdata('lang'); 
-                                echo base_url('uploads/language_image/'.$image.'.png'); ?>" 
+                                echo base_url('assets/language_image/'.$image.'.png'); ?>" 
                                 /> 
                                 <span class="label label-warning">15</span>
                             </a>
@@ -50,7 +50,7 @@
                                         <li class="language" id="arabic">
                                             <a href="<?=base_url('language/index/arabic')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/arabic.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/arabian.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Arabic
@@ -62,7 +62,7 @@
                                         <li class="language" id="bengali">
                                             <a href="<?=base_url('language/index/bengali')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/bengali.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/bengali.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Bengali
@@ -74,7 +74,7 @@
                                         <li class="language" id="chinese">
                                             <a href="<?=base_url('language/index/chinese')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/chinese.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/chinese.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Chinese
@@ -86,7 +86,7 @@
                                         <li class="language" id="english">
                                             <a href="<?=base_url('language/index/english')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/english.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/english.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     English
@@ -98,7 +98,7 @@
                                         <li class="language" id="french">
                                             <a href="<?=base_url('language/index/french')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/french.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/french.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     French
@@ -110,7 +110,7 @@
                                         <li class="language" id="german">
                                             <a href="<?=base_url('language/index/german')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/german.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/german.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     German
@@ -122,7 +122,7 @@
                                         <li class="language" id="hindi">
                                             <a href="<?=base_url('language/index/hindi')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/hindi.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/hindi.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Hindi
@@ -134,7 +134,7 @@
                                         <li class="language" id="indonesian">
                                             <a href="<?=base_url('language/index/indonesian')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/indonesian.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/indonesia.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Indonesian
@@ -146,7 +146,7 @@
                                         <li class="language" id="italian">
                                             <a href="<?=base_url('language/index/italian')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/italian.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/italian.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Italian
@@ -158,7 +158,7 @@
                                         <li class="language" id="portuguese">
                                             <a href="<?=base_url('language/index/portuguese')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/portuguese.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/portuguese.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Portuguese
@@ -170,7 +170,7 @@
                                         <li class="language" id="romanian">
                                             <a href="<?=base_url('language/index/romanian')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/romanian.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/romanian.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Romanian
@@ -182,7 +182,7 @@
                                         <li class="language" id="russian">
                                             <a href="<?=base_url('language/index/russian')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/russian.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/russian.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Russian
@@ -194,7 +194,7 @@
                                         <li class="language" id="spanish">
                                             <a href="<?=base_url('language/index/spanish')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/spanish.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/spanish.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Spanish
@@ -206,7 +206,7 @@
                                         <li class="language" id="thai">
                                             <a href="<?=base_url('language/index/thai')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/thai.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/thai.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Thai
@@ -218,7 +218,7 @@
                                         <li class="language" id="turkish">
                                             <a href="<?=base_url('language/index/turkish')?>">
                                                 <div class="pull-left">
-                                                    <img src="<?=base_url('uploads/language_image/turkish.png'); ?>"/>
+                                                    <img src="<?=base_url('assets/language_image/turkish.png'); ?>"/>
                                                 </div>
                                                 <h4>
                                                     Turkish

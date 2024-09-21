@@ -74,7 +74,7 @@ $(function() {
                 enabled: false
             },
             series: [{
-                name: 'Visitors',
+                name: 'Pengunjung',
                 data: [
                     <?php
                         foreach ($showChartVisitor as $key => $visitors) {
