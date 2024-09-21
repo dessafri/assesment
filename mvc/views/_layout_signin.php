@@ -21,12 +21,15 @@
 
     <div class="col-md-4 col-md-offset-4 marg" style="margin-top:30px;">
         <?php
-            // if(inicompute($siteinfos->photo)) {
-            //     echo "<center><img width='75' height='75' src=".base_url('assets/images/logosmi.png')." /></center>";
-            // }
+             if(inicompute($siteinfos->photo)) {
+                 echo "<center><img width='155' height='155' src=".base_url('assets/images/logo_kejaksaan.png')." /></center>";
+             }
         ?>
     </div>
-
+    <br>
+    <br>
+    <br>
+    <br>
     <?php $this->load->view($subview); ?>
 
     <?php if(config_item('demo')) { ?>
