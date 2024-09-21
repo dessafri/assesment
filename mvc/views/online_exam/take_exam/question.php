@@ -33,7 +33,7 @@
                 </ul>
             </div>
 
-            <form id="answerForm" method="post">
+            <form id="answerForm" method="post" enctype="multipart/form-data">
                 <div class="box-body step-content">
                     <input style="display:none" type="text" name="studentfinishstatus">
                     <?php
@@ -42,8 +42,8 @@
                             ?>
                             <div class="clearfix step-pane sample-pane <?= $key == 0 ? 'active' : '' ?>" data-questionID="<?= $entry->idresult ?>" data-step="<?= $key + 1 ?>">
                                 <div class="question-body">
-                                    <label class="lb-title">Sub Type
-                                        <?= $key + 1 ?> <?= $this->lang->line('take_exam_of') ?>
+                                    <label class="lb-title">Kelompok Pertanyaan
+                                        <?= $key + 1 ?> dari
                                         <?= count($newArray) ?>
                                     </label>
                                     <label class="lb-content" style="font-weight: bold; font-size: 1.5em;"><?= $entry->nameresult ?></label>
@@ -61,8 +61,8 @@
                                     $optionCount = $question->totalOption;
                                     ?>
                                     <div class="question-body">
-                                        <label class="lb-title"><?= $this->lang->line('take_exam_question') ?>
-                                            <?= $index + 1 ?> <?= $this->lang->line('take_exam_of') ?>
+                                        <label class="lb-title">Pertanyaan
+                                            <?= $index + 1 ?> dari
                                             <?= count($entry->detail_soal) ?>
                                         </label>
                                         <label class="lb-content"><?= $question->question ?></label>
@@ -137,12 +137,13 @@
                                                         <?php
                                                     }
                                                 }
+
                                                 if ($question->typeNumber == 5) { ?>
                                                     <tr>
                                                         <td>
                                                             <div class="form-group">
                                                                 <label for="answer<?= $question->questionBankID ?>">Masukkan jawaban</label>
-                                                                <input type="number" id="answer<?= $question->questionBankID ?>" value="" class="form-control">
+                                                                <input type="number" name="answer[<?= $question->typeNumber ?>][<?= $question->questionBankID ?>]" id="answer<?= $question->questionBankID ?>" value="" class="form-control">
                                                             </div>
                         
                                                             <div class="form-group">
@@ -345,6 +346,11 @@
                     have = 1;
                     return have;
                 }
+            } else if (elementType == 'number') {
+                if ($(this).val() != '') {
+                    have = 1;
+                    return have;
+                }
             }
         });
         if (have) {
@@ -400,6 +406,8 @@
                 case 'radio': $(this).prop('checked', false); break;
                 case 'checkbox': $(this).attr('checked', false); break;
                 case 'text': $(this).val(''); break;
+                case 'number': $(this).val(''); break;
+                case 'file': $(this).val(''); break;
             }
         });
         if ($('#question' + NowStep).attr('class') == 'marked') {

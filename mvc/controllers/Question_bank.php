@@ -58,6 +58,7 @@ class Question_bank extends Admin_Controller {
     }
 
     protected function rules($postOption = 0) {
+        $type = $this->input->post('type');
         $rules = array(
             array(
                 'field' => 'group',
@@ -99,12 +100,16 @@ class Question_bank extends Admin_Controller {
                 'label' => $this->lang->line("question_bank_type"),
                 'rules' => 'trim|required|xss_clean|callback_unique_type'
             ),
-            array(
+        );
+
+        // Conditionally add the 'totalOption' rule based on the 'type' value
+        if ($type != '5') {
+            $rules[] = array(
                 'field' => 'totalOption',
                 'label' => $this->lang->line("question_bank_totalOption"),
                 'rules' => 'trim|required|xss_clean|callback_unique_totalOption'
-            )
-        );
+            );
+        }
 
         $j = inicompute($rules);
 
@@ -271,8 +276,6 @@ class Question_bank extends Admin_Controller {
         $this->data['answers']   = [];
         $this->data['typeID']    = 0;
         $this->data['totalOptionID'] = 0;
-        // var_dump($this->data['parents']);
-        // exit;
 
         if($_POST !== []) {
             $postOption = inicompute($this->input->post("option"));
@@ -437,10 +440,13 @@ class Question_bank extends Admin_Controller {
                         $this->question_bank_m->update_question_bank(['totalOption' => $totalOption], $questionInsertID);
                     }
                 }elseif ($this->input->post("type") == 5) {
-                    $totalOption = $this->input->post("totalOption");
-                    if($totalOption != $this->input->post("totalOption")) {
-                        $this->question_bank_m->update_question_bank(['totalOption' => $totalOption], $questionInsertID);
-                    }
+                    $ansData = [
+                        'questionID' => $questionInsertID,
+                        'text' => '',
+                        'typeNumber' =>$this->input->post("type")
+                    ];
+                    $this->question_answer_m->insert_question_answer($ansData);
+                    $this->question_bank_m->update_question_bank(['totalOption' => 1], $questionInsertID);
                 }    
 
                 if(isset($imageUpload['error'])) {
@@ -790,22 +796,15 @@ class Question_bank extends Admin_Controller {
                         }
                         if ($this->input->post("type") == 5) {
                             $getQuestionAnswers = pluck($this->question_answer_m->get_order_by_question_answer(['questionID' => $questionID]), 'text', 'answerID');
-
-                            if(inicompute($this->data['options'])) {
-                                $optionsArray = [];
-                                foreach ($this->data['options'] as $optionKey => $option) {
-                                    $optionsArray[] =  $optionKey;
-                                }
-                                if(inicompute($optionsArray)) {
-                                    $this->question_option_m->delete_batch_option($optionsArray);
-                                }
+                            if(!$getQuestionAnswers){
+                                $ansData = [
+                                    'questionID' => $questionID,
+                                    'text' => '',
+                                    'typeNumber' =>$this->input->post("type")
+                                ];
+                                $this->question_answer_m->insert_question_answer($ansData);
                             }
-
-                            $i = 0;
-                            $totalOption = 0;
-                            if($totalOption != $this->input->post("totalOption")) {
-                                $question_bank['totalOption'] = $totalOption;
-                            }
+                            $question_bank['totalOption'] = 1;
                             $this->question_bank_m->update_question_bank($question_bank, $questionID);
                         }
 

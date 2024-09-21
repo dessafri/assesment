@@ -297,10 +297,7 @@
     $('#type').change(function() {
         $('#in').children().remove();
         var type = $(this).val();
-        if(type == 0) {
-            $('#totalOptionDiv').hide();
-        } else if(type == 5) {
-            $('#totalOption').val(1);
+        if(type == 0 || type == 5) {
             $('#totalOptionDiv').hide();
         }else{
             $('#totalOption').val(0);
@@ -386,8 +383,8 @@
 
             return html;
         }else if(type == 5) {
-            var html = '';
-           return html;
+            var html = '<div class="form-group coption"><label for="answer'+id+'" class="col-sm-2 control-label"><?=$this->lang->line("question_bank_answer")?> '+ id +'</label><div class="col-sm-4"><input type="text" class="form-control" id="answer'+id+'" name="answer[]" value="'+value+'" placeholder="<?=$this->lang->line("question_bank_answer")?> '+id+'" ></div><div class="col-sm-1"></div><span class="col-sm-4 control-label text-red" id="anserror'+id+'"><?php if (isset($form_validation['answer1'])) {echo $form_validation['answer1'];}?></span></div>';
+            return html;
 
         }
 

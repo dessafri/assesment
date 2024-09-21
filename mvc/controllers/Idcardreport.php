@@ -18,6 +18,9 @@ class Idcardreport extends Admin_Controller
     public $systemadmin_m;
     public $question_level_m;
     public $question_level_report_m;
+    public $online_exam_question_m;
+    public $online_exam_user_answer_m;
+    public $online_exam_user_answer_option_m;
     public $teacher_m;
     public $user_m;
     public $data;
@@ -46,6 +49,9 @@ class Idcardreport extends Admin_Controller
         $this->load->model('student_m');
         $this->load->model('teacher_m');
         $this->load->model('schoolyear_m');
+        $this->load->model('online_exam_question_m');
+        $this->load->model('online_exam_user_answer_m');
+        $this->load->model('online_exam_user_answer_option_m');
         $this->load->model('question_level_m');
         $this->load->model('question_level_report_m');
         $language = $this->session->userdata('lang');
@@ -59,15 +65,18 @@ class Idcardreport extends Admin_Controller
                 'field' => 'usertypeID',
                 'label' => $this->lang->line('idcardreport_idcard'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
-            ), array(
+            ),
+            array(
                 'field' => 'userID',
                 'label' => $this->lang->line('idcardreport_user'),
                 'rules' => 'trim|xss_clean|numeric',
-            ), array(
+            ),
+            array(
                 'field' => 'type',
                 'label' => $this->lang->line('idcardreport_type'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
-            ), array(
+            ),
+            array(
                 'field' => 'background',
                 'label' => $this->lang->line('idcardreport_background'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
@@ -97,27 +106,33 @@ class Idcardreport extends Admin_Controller
                 'field' => 'usertypeID',
                 'label' => $this->lang->line('idcardreport_idcard'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
-            ), array(
+            ),
+            array(
                 'field' => 'userID',
                 'label' => $this->lang->line('idcardreport_user'),
                 'rules' => 'trim|xss_clean|numeric',
-            ), array(
+            ),
+            array(
                 'field' => 'type',
                 'label' => $this->lang->line('idcardreport_type'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
-            ), array(
+            ),
+            array(
                 'field' => 'background',
                 'label' => $this->lang->line('idcardreport_background'),
                 'rules' => 'trim|required|xss_clean|numeric|callback_unique_data',
-            ), array(
+            ),
+            array(
                 'field' => 'to',
                 'label' => $this->lang->line('idcardreport_to'),
                 'rules' => 'trim|required|xss_clean|valid_email',
-            ), array(
+            ),
+            array(
                 'field' => 'subject',
                 'label' => $this->lang->line('idcardreport_subject'),
                 'rules' => 'trim|required|xss_clean',
-            ), array(
+            ),
+            array(
                 'field' => 'message',
                 'label' => $this->lang->line('idcardreport_message'),
                 'rules' => 'trim|xss_clean',
@@ -299,6 +314,41 @@ class Idcardreport extends Admin_Controller
         $dataTotalReport = $this->question_level_report_m->total_report();
         $dataEndReportLimit2 = $this->question_level_report_m->report_type_limit2();
         $types = $this->question_level_m->get_question_level();
+
+        $results = $this->question_level_report_m->get_parent();
+        foreach ($results as $key => &$parent) {
+            $childs = $this->question_level_report_m->get_child($parent['userID'], $parent['examID'], $parent['ids']);
+            foreach ($childs as $key => $child) {
+                $parent['detail'][$child['title']][] = $child;
+            }
+        }
+
+        $this->data['subtype'] = $types;
+        $this->data['classes'] = $this->classes_m->get_classes();
+        $this->data['results'] = $results;
+        $this->data["subview"] = "report/idcard/IdcardReportView";
+        $this->load->view('_layout_main', $this->data);
+    }
+
+    public function index_old()
+    {
+        $this->data['headerassets'] = array(
+            'css' => array(
+                'assets/select2/css/select2.css',
+                'assets/select2/css/select2-bootstrap.css',
+            ),
+            'js' => array(
+                'assets/select2/select2.js',
+            ),
+        );
+        $this->data['usertypes'] = $this->usertype_m->get_usertype();
+        $users = $this->student_m->get_student();
+        $datareport = $this->question_level_report_m->report_subtype();
+        $dataReportType = $this->question_level_report_m->report_type();
+        $dataEndReport = $this->question_level_report_m->end_report();
+        $dataTotalReport = $this->question_level_report_m->total_report();
+        $dataEndReportLimit2 = $this->question_level_report_m->report_type_limit2();
+        $types = $this->question_level_m->get_question_level();
         $results = [];
         foreach ($users as $user) {
             $query = "SELECT
@@ -315,10 +365,10 @@ class Idcardreport extends Admin_Controller
                         userID,
                         groupID,
                         questionLevelID;";
-        
+
             $result = $this->db->query($query, array($user->studentID));
             $datareportSubtype = $result->result_array();
-        
+
             $queryDetail = "SELECT 
                             a.optionID, 
                             a.userId, 
@@ -340,20 +390,20 @@ class Idcardreport extends Admin_Controller
                           WHERE 
                             a.relasi_jabatan = ?
                           GROUP BY e.levelID, a.userID";
-        
+
             $resultDetail = $this->db->query($queryDetail, array($user->studentID));
             $dataReportDetail = $resultDetail->result_array();
-        
+
             $user_data = [
                 'name' => $user->name,
                 'types' => [],
                 'result_test' => [],
             ];
-        
+
             // Loop untuk setiap tipe pertanyaan
             foreach ($types as $type) {
                 $value = 0;
-        
+
                 // Loop untuk setiap data laporan
                 foreach ($dataReportType as $report) {
                     if ($report['userID'] == $user->studentID && $report['questionLevelID'] == $type->questionLevelID) {
@@ -369,11 +419,11 @@ class Idcardreport extends Admin_Controller
             }
             $totalValue = array_sum(array_column($user_data['types'], 'value'));
             $count = count($user_data['types']);
-            $positiveValueCount = count(array_filter($user_data['types'], function($type) {
+            $positiveValueCount = count(array_filter($user_data['types'], function ($type) {
                 return $type['value'] > 0;
             }));
             $averageValue = 0;
-            if($positiveValueCount != 0){
+            if ($positiveValueCount != 0) {
                 $averageValue = $count > 0 ? $totalValue / $positiveValueCount : 0;
             }
 
@@ -381,39 +431,39 @@ class Idcardreport extends Admin_Controller
                 'total' => $totalValue,
                 'average' => $averageValue
             ];
-        
+
             $arrayAssociative = [];
 
-            
-        
+
+
             // Loop through the results and build the associative array
             foreach ($dataReportDetail as $row) {
                 $title = $row['title'];
                 $userId = $row['userId'];
                 $value = $row['value'];
-            
+
                 // Check if the title key exists in the associative array
                 if (!isset($arrayAssociative[$title])) {
                     $arrayAssociative[$title] = [];
                 }
-            
+
                 // Check if the user ID key exists for the current title
                 if (!isset($arrayAssociative[$title][$userId])) {
                     // If user ID doesn't exist, initialize the user ID array as an empty array
                     $arrayAssociative[$title][$userId] = [];
                 }
-            
+
                 // Append the value to the user ID array for the current title
                 $arrayAssociative[$title][$userId][] = $value;
-            }            
-        
+            }
+
             // Ensure each title group in the associative array has the right number of values
             $requiredResultsCount = count($types);
             foreach ($arrayAssociative as &$userEntries) {
                 foreach ($userEntries as &$entry) {
                     // Get the current count of values
                     $currentCount = count($entry);
-        
+
                     // Check if the current count is less than the required count
                     if ($currentCount < $requiredResultsCount) {
                         // Append zeros to the value array
@@ -423,30 +473,30 @@ class Idcardreport extends Admin_Controller
                     }
                 }
             }
-        
+
             // Calculate totals and averages for each entry in the associative array
             foreach ($arrayAssociative as &$penilaian) {
                 foreach ($penilaian as &$values) {
                     $totalValue = array_sum($values); // Hitung total dari semua nilai
                     $count = count($values); // Hitung jumlah nilai
-        
-                    $positiveValueCount = count(array_filter($values, function($value) {
+
+                    $positiveValueCount = count(array_filter($values, function ($value) {
                         return $value > 0;
                     }));
 
                     $averageValue = 0;
-                    if($positiveValueCount != 0){
+                    if ($positiveValueCount != 0) {
                         $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
                     }
-                    
+
                     // Hitung rata-rata hanya jika ada nilai positif
-        
+
                     // Tambahkan total dan average ke dalam array
                     $values['total'] = $totalValue; // Menambahkan total ke akhir array
                     $values['average'] = number_format($averageValue, 4); // Menambahkan average ke akhir array
                 }
             }
-        
+
             // Process dataPenilaian based on $datareportSubtype
             $dataPenilaian = [];
             foreach ($datareportSubtype as $data) {
@@ -459,11 +509,11 @@ class Idcardreport extends Admin_Controller
                         'detail' => []             // Initialize array for values
                     ];
                 }
-        
+
                 // Insert value into the array for groupID
                 $dataPenilaian[$data['groupID']]['value'][] = $data['value'];
             }
-        
+
             // Ensure each group in $dataPenilaian has the right number of values
             foreach ($dataPenilaian as &$entry) {
                 $currentCount = count($entry['value']);
@@ -474,35 +524,35 @@ class Idcardreport extends Admin_Controller
                     }
                 }
             }
-        
+
             // Calculate totals and averages for each group in dataPenilaian
             foreach ($dataPenilaian as &$penilaian) {
                 $totalValue = array_sum($penilaian['value']); // Hitung total
                 $count = count($penilaian['value']); // Hitung jumlah nilai
 
-                $positiveValueCount = count(array_filter($penilaian['value'], function($value) {
+                $positiveValueCount = count(array_filter($penilaian['value'], function ($value) {
                     return $value > 0;
                 }));
 
                 $averageValue = 0;
-                if($positiveValueCount != 0){
+                if ($positiveValueCount != 0) {
                     $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
                 }
-        
+
                 // Hitung rata-rata jika ada nilai
-        
+
                 // Tambahkan total dan average ke dalam array
                 $penilaian['total'] = $totalValue;
                 $penilaian['average'] = number_format($averageValue, 4);
             }
-        
+
             // Map detail to dataPenilaian based on arrayAssociative
             foreach ($dataPenilaian as $groupId => $groupData) {
                 if (isset($arrayAssociative[$groupData['name']])) {
                     $dataPenilaian[$groupId]['detail'] = $arrayAssociative[$groupData['name']];
                 }
             }
-        
+
             // Process dataEndReportLimit2 to populate result_test
             foreach ($dataEndReportLimit2 as $data) {
                 if ($data['userID'] == $user->studentID && $data['questionLevelID'] == $type->questionLevelID) {
@@ -517,7 +567,7 @@ class Idcardreport extends Admin_Controller
                             break;
                         }
                     }
-        
+
                     // If examID doesn't exist, create a new entry
                     if (!$examIDExists) {
                         $user_data['result_test'][] = [
@@ -531,7 +581,7 @@ class Idcardreport extends Admin_Controller
                     }
                 }
             }
-        
+
             // Calculate totals and averages while constructing the summary
             foreach ($user_data['result_test'] as &$exam) {
                 $totalValue = array_sum(array_column($exam['results'], 'value_tes'));
@@ -539,22 +589,22 @@ class Idcardreport extends Admin_Controller
                 // exit;
                 $count = count($exam['results']);
 
-                $positiveValueCount = count(array_filter($exam['results'], function($value) {
+                $positiveValueCount = count(array_filter($exam['results'], function ($value) {
                     return $value > 0;
                 }));
 
                 $averageValue = 0;
-                if($positiveValueCount != 0){
+                if ($positiveValueCount != 0) {
                     $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
                 }
                 // $averageValue = $count > 0 ? $totalValue / $count : 0;
-        
+
                 // Add summary directly to the exam
                 $exam['summary'] = [
                     'total' => $totalValue,
                     'average' => number_format($averageValue, 4),
                 ];
-        
+
                 // Ensure each examID has the correct number of results
                 $currentResultsCount = count($exam['results']);
                 if ($currentResultsCount < count($types)) {
@@ -568,7 +618,7 @@ class Idcardreport extends Admin_Controller
                     }
                 }
             }
-        
+
             // Set final scores based on dataEndReport and dataTotalReport
             foreach ($dataEndReport as $nilaiakhir) {
                 if ($nilaiakhir['userID'] == $user->studentID) {
@@ -576,7 +626,7 @@ class Idcardreport extends Admin_Controller
                     break;
                 }
             }
-        
+
             foreach ($dataTotalReport as $totalnilaiakhir) {
                 if ($totalnilaiakhir['userID'] == $user->studentID) {
                     $user_data['total_akhir'] = $totalnilaiakhir['total_akhir'];
@@ -584,38 +634,34 @@ class Idcardreport extends Admin_Controller
                 }
             }
 
-        
+
             // Add penilaian to the user data
             $user_data['result_test']['penilaian'] = $dataPenilaian;
-        
+
             // Add user_data to final results
             $results[] = $user_data;
         }
-        // var_dump($results[1]['summary'][0]);
-        // exit;
-        
-        // var_dump($results);
-        // exit;
         $this->data['subtype'] = $types;
         $this->data['classes'] = $this->classes_m->get_classes();
         $this->data['results'] = $results;
         $this->data["subview"] = "report/idcard/IdcardReportView";
         $this->load->view('_layout_main', $this->data);
     }
-    
 
-    public function getReport(){
+
+    public function getReport()
+    {
         try {
             $users = $this->student_m->get_student();
-    $dataReportType = $this->question_level_report_m->report_type();
-    $dataEndReport = $this->question_level_report_m->end_report();
-    $dataEndReportLimit2 = $this->question_level_report_m->report_type_limit2();
-    $dataTotalReport = $this->question_level_report_m->total_report();
-    $types = $this->question_level_m->get_question_level();
+            $dataReportType = $this->question_level_report_m->report_type();
+            $dataEndReport = $this->question_level_report_m->end_report();
+            $dataEndReportLimit2 = $this->question_level_report_m->report_type_limit2();
+            $dataTotalReport = $this->question_level_report_m->total_report();
+            $types = $this->question_level_m->get_question_level();
 
-    $results = [];
-    foreach ($users as $user) {
-        $query = "SELECT
+            $results = [];
+            foreach ($users as $user) {
+                $query = "SELECT
                     userID,
                     groupID,
                     questionLevelID,
@@ -629,11 +675,11 @@ class Idcardreport extends Admin_Controller
                     userID,
                     groupID,
                     questionLevelID;";
-    
-        $result = $this->db->query($query, array($user->studentID));
-        $datareportSubtype = $result->result_array();
-    
-        $queryDetail = "SELECT 
+
+                $result = $this->db->query($query, array($user->studentID));
+                $datareportSubtype = $result->result_array();
+
+                $queryDetail = "SELECT 
                         a.optionID, 
                         a.userId, 
                         a.relasi_jabatan, 
@@ -654,501 +700,499 @@ class Idcardreport extends Admin_Controller
                       WHERE 
                         a.relasi_jabatan = ?
                       GROUP BY e.levelID, a.userID";
-    
-        $resultDetail = $this->db->query($queryDetail, array($user->studentID));
-        $dataReportDetail = $resultDetail->result_array();
-    
-        $user_data = [
-            'name' => $user->name,
-            'types' => [],
-            'result_test' => [],
-        ];
-    
-        // Loop untuk setiap tipe pertanyaan
-        foreach ($types as $type) {
-            $value = 0;
-    
-            // Loop untuk setiap data laporan
-            foreach ($dataReportType as $report) {
-                if ($report['userID'] == $user->studentID && $report['questionLevelID'] == $type->questionLevelID) {
-                    $value = $report['value'];
-                    break;
+
+                $resultDetail = $this->db->query($queryDetail, array($user->studentID));
+                $dataReportDetail = $resultDetail->result_array();
+
+                $user_data = [
+                    'name' => $user->name,
+                    'types' => [],
+                    'result_test' => [],
+                ];
+
+                // Loop untuk setiap tipe pertanyaan
+                foreach ($types as $type) {
+                    $value = 0;
+
+                    // Loop untuk setiap data laporan
+                    foreach ($dataReportType as $report) {
+                        if ($report['userID'] == $user->studentID && $report['questionLevelID'] == $type->questionLevelID) {
+                            $value = $report['value'];
+                            break;
+                        }
+                    }
+                    // Tambahkan data tipe ke dalam user_data
+                    $user_data['types'][] = [
+                        'name' => $type->name,
+                        'value' => $value,
+                    ];
                 }
-            }
-            // Tambahkan data tipe ke dalam user_data
-            $user_data['types'][] = [
-                'name' => $type->name,
-                'value' => $value,
-            ];
-        }
-        $totalValue = array_sum(array_column($user_data['types'], 'value'));
-        $count = count($user_data['types']);
-        $positiveValueCount = count(array_filter($user_data['types'], function($type) {
-            return $type['value'] > 0;
-        }));
-        $averageValue = 0;
-        if($positiveValueCount != 0){
-            $averageValue = $count > 0 ? $totalValue / $positiveValueCount : 0;
-        }
+                $totalValue = array_sum(array_column($user_data['types'], 'value'));
+                $count = count($user_data['types']);
+                $positiveValueCount = count(array_filter($user_data['types'], function ($type) {
+                    return $type['value'] > 0;
+                }));
+                $averageValue = 0;
+                if ($positiveValueCount != 0) {
+                    $averageValue = $count > 0 ? $totalValue / $positiveValueCount : 0;
+                }
 
-        $user_data['summary'][] = [
-            'total' => $totalValue,
-            'average' => $averageValue
-        ];
-    
-        $arrayAssociative = [];
+                $user_data['summary'][] = [
+                    'total' => $totalValue,
+                    'average' => $averageValue
+                ];
 
-        
-    
-        // Loop through the results and build the associative array
-        foreach ($dataReportDetail as $row) {
-            $title = $row['title'];
-            $userId = $row['userId'];
-            $value = $row['value'];
-        
-            // Check if the title key exists in the associative array
-            if (!isset($arrayAssociative[$title])) {
-                $arrayAssociative[$title] = [];
-            }
-        
-            // Check if the user ID key exists for the current title
-            if (!isset($arrayAssociative[$title][$userId])) {
-                // If user ID doesn't exist, initialize the user ID array as an empty array
-                $arrayAssociative[$title][$userId] = [];
-            }
-        
-            // Append the value to the user ID array for the current title
-            $arrayAssociative[$title][$userId][] = $value;
-        }            
-    
-        // Ensure each title group in the associative array has the right number of values
-        $requiredResultsCount = count($types);
-        foreach ($arrayAssociative as &$userEntries) {
-            foreach ($userEntries as &$entry) {
-                // Get the current count of values
-                $currentCount = count($entry);
-    
-                // Check if the current count is less than the required count
-                if ($currentCount < $requiredResultsCount) {
-                    // Append zeros to the value array
-                    for ($i = 0; $i < ($requiredResultsCount - $currentCount); $i++) {
-                        $entry[] = 0;  // Add zero
+                $arrayAssociative = [];
+
+
+
+                // Loop through the results and build the associative array
+                foreach ($dataReportDetail as $row) {
+                    $title = $row['title'];
+                    $userId = $row['userId'];
+                    $value = $row['value'];
+
+                    // Check if the title key exists in the associative array
+                    if (!isset($arrayAssociative[$title])) {
+                        $arrayAssociative[$title] = [];
+                    }
+
+                    // Check if the user ID key exists for the current title
+                    if (!isset($arrayAssociative[$title][$userId])) {
+                        // If user ID doesn't exist, initialize the user ID array as an empty array
+                        $arrayAssociative[$title][$userId] = [];
+                    }
+
+                    // Append the value to the user ID array for the current title
+                    $arrayAssociative[$title][$userId][] = $value;
+                }
+
+                // Ensure each title group in the associative array has the right number of values
+                $requiredResultsCount = count($types);
+                foreach ($arrayAssociative as &$userEntries) {
+                    foreach ($userEntries as &$entry) {
+                        // Get the current count of values
+                        $currentCount = count($entry);
+
+                        // Check if the current count is less than the required count
+                        if ($currentCount < $requiredResultsCount) {
+                            // Append zeros to the value array
+                            for ($i = 0; $i < ($requiredResultsCount - $currentCount); $i++) {
+                                $entry[] = 0;  // Add zero
+                            }
+                        }
                     }
                 }
-            }
-        }
-    
-        // Calculate totals and averages for each entry in the associative array
-        foreach ($arrayAssociative as &$penilaian) {
-            foreach ($penilaian as &$values) {
-                $totalValue = array_sum($values); // Hitung total dari semua nilai
-                $count = count($values); // Hitung jumlah nilai
-    
-                $positiveValueCount = count(array_filter($values, function($value) {
-                    return $value > 0;
-                }));
 
-                $averageValue = 0;
-                if($positiveValueCount != 0){
-                    $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
+                // Calculate totals and averages for each entry in the associative array
+                foreach ($arrayAssociative as &$penilaian) {
+                    foreach ($penilaian as &$values) {
+                        $totalValue = array_sum($values); // Hitung total dari semua nilai
+                        $count = count($values); // Hitung jumlah nilai
+
+                        $positiveValueCount = count(array_filter($values, function ($value) {
+                            return $value > 0;
+                        }));
+
+                        $averageValue = 0;
+                        if ($positiveValueCount != 0) {
+                            $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
+                        }
+
+                        // Hitung rata-rata hanya jika ada nilai positif
+
+                        // Tambahkan total dan average ke dalam array
+                        $values['total'] = $totalValue; // Menambahkan total ke akhir array
+                        $values['average'] = number_format($averageValue, 4); // Menambahkan average ke akhir array
+                    }
                 }
-                
-                // Hitung rata-rata hanya jika ada nilai positif
-    
-                // Tambahkan total dan average ke dalam array
-                $values['total'] = $totalValue; // Menambahkan total ke akhir array
-                $values['average'] = number_format($averageValue, 4); // Menambahkan average ke akhir array
-            }
-        }
-    
-        // Process dataPenilaian based on $datareportSubtype
-        $dataPenilaian = [];
-        foreach ($datareportSubtype as $data) {
-            // Check if groupID already exists
-            if (!isset($dataPenilaian[$data['groupID']])) {
-                // If groupID doesn't exist, create a new entry for it
-                $dataPenilaian[$data['groupID']] = [
-                    'name' => $data['name'],  // Save name under groupID
-                    'value' => [],
-                    'detail' => []             // Initialize array for values
-                ];
-            }
-    
-            // Insert value into the array for groupID
-            $dataPenilaian[$data['groupID']]['value'][] = $data['value'];
-        }
-    
-        // Ensure each group in $dataPenilaian has the right number of values
-        foreach ($dataPenilaian as &$entry) {
-            $currentCount = count($entry['value']);
-            if ($currentCount < $requiredResultsCount) {
-                // Append zeros to the value array
-                for ($i = 0; $i < ($requiredResultsCount - $currentCount); $i++) {
-                    $entry['value'][] = 0;  // Add zero
-                }
-            }
-        }
-    
-        // Calculate totals and averages for each group in dataPenilaian
-        foreach ($dataPenilaian as &$penilaian) {
-            $totalValue = array_sum($penilaian['value']); // Hitung total
-            $count = count($penilaian['value']); // Hitung jumlah nilai
 
-            $positiveValueCount = count(array_filter($penilaian['value'], function($value) {
-                return $value > 0;
-            }));
-
-            $averageValue = 0;
-            if($positiveValueCount != 0){
-                $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
-            }
-    
-            // Hitung rata-rata jika ada nilai
-    
-            // Tambahkan total dan average ke dalam array
-            $penilaian['total'] = $totalValue;
-            $penilaian['average'] = number_format($averageValue, 4);
-        }
-    
-        // Map detail to dataPenilaian based on arrayAssociative
-        foreach ($dataPenilaian as $groupId => $groupData) {
-            if (isset($arrayAssociative[$groupData['name']])) {
-                $dataPenilaian[$groupId]['detail'] = $arrayAssociative[$groupData['name']];
-            }
-        }
-    
-        // Process dataEndReportLimit2 to populate result_test
-        foreach ($dataEndReportLimit2 as $data) {
-            if ($data['userID'] == $user->studentID && $data['questionLevelID'] == $type->questionLevelID) {
-                $examIDExists = false;
-                foreach ($user_data['result_test'] as &$exam) {
-                    if ($exam['examID'] == $data['examID']) {
-                        $exam['results'][] = [
-                            'value_tes' => $data['value'],
-                            'questionLevelID' => $data['questionLevelID'],
+                // Process dataPenilaian based on $datareportSubtype
+                $dataPenilaian = [];
+                foreach ($datareportSubtype as $data) {
+                    // Check if groupID already exists
+                    if (!isset($dataPenilaian[$data['groupID']])) {
+                        // If groupID doesn't exist, create a new entry for it
+                        $dataPenilaian[$data['groupID']] = [
+                            'name' => $data['name'],  // Save name under groupID
+                            'value' => [],
+                            'detail' => []             // Initialize array for values
                         ];
-                        $examIDExists = true;
+                    }
+
+                    // Insert value into the array for groupID
+                    $dataPenilaian[$data['groupID']]['value'][] = $data['value'];
+                }
+
+                // Ensure each group in $dataPenilaian has the right number of values
+                foreach ($dataPenilaian as &$entry) {
+                    $currentCount = count($entry['value']);
+                    if ($currentCount < $requiredResultsCount) {
+                        // Append zeros to the value array
+                        for ($i = 0; $i < ($requiredResultsCount - $currentCount); $i++) {
+                            $entry['value'][] = 0;  // Add zero
+                        }
+                    }
+                }
+
+                // Calculate totals and averages for each group in dataPenilaian
+                foreach ($dataPenilaian as &$penilaian) {
+                    $totalValue = array_sum($penilaian['value']); // Hitung total
+                    $count = count($penilaian['value']); // Hitung jumlah nilai
+
+                    $positiveValueCount = count(array_filter($penilaian['value'], function ($value) {
+                        return $value > 0;
+                    }));
+
+                    $averageValue = 0;
+                    if ($positiveValueCount != 0) {
+                        $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
+                    }
+
+                    // Hitung rata-rata jika ada nilai
+
+                    // Tambahkan total dan average ke dalam array
+                    $penilaian['total'] = $totalValue;
+                    $penilaian['average'] = number_format($averageValue, 4);
+                }
+
+                // Map detail to dataPenilaian based on arrayAssociative
+                foreach ($dataPenilaian as $groupId => $groupData) {
+                    if (isset($arrayAssociative[$groupData['name']])) {
+                        $dataPenilaian[$groupId]['detail'] = $arrayAssociative[$groupData['name']];
+                    }
+                }
+
+                // Process dataEndReportLimit2 to populate result_test
+                foreach ($dataEndReportLimit2 as $data) {
+                    if ($data['userID'] == $user->studentID && $data['questionLevelID'] == $type->questionLevelID) {
+                        $examIDExists = false;
+                        foreach ($user_data['result_test'] as &$exam) {
+                            if ($exam['examID'] == $data['examID']) {
+                                $exam['results'][] = [
+                                    'value_tes' => $data['value'],
+                                    'questionLevelID' => $data['questionLevelID'],
+                                ];
+                                $examIDExists = true;
+                                break;
+                            }
+                        }
+
+                        // If examID doesn't exist, create a new entry
+                        if (!$examIDExists) {
+                            $user_data['result_test'][] = [
+                                'name' => 'Hasil Exam',
+                                'examID' => $data['examID'],
+                                'results' => [[
+                                    'value_tes' => $data['value'],
+                                    'questionLevelID' => $data['questionLevelID'],
+                                ]],
+                            ];
+                        }
+                    }
+                }
+
+                // Calculate totals and averages while constructing the summary
+                foreach ($user_data['result_test'] as &$exam) {
+                    $totalValue = array_sum(array_column($exam['results'], 'value_tes'));
+                    // var_dump($totalValue);
+                    // exit;
+                    $count = count($exam['results']);
+
+                    $positiveValueCount = count(array_filter($exam['results'], function ($value) {
+                        return $value > 0;
+                    }));
+
+                    $averageValue = 0;
+                    if ($positiveValueCount != 0) {
+                        $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
+                    }
+                    // $averageValue = $count > 0 ? $totalValue / $count : 0;
+
+                    // Add summary directly to the exam
+                    $exam['summary'] = [
+                        'total' => $totalValue,
+                        'average' => number_format($averageValue, 4),
+                    ];
+
+                    // Ensure each examID has the correct number of results
+                    $currentResultsCount = count($exam['results']);
+                    if ($currentResultsCount < count($types)) {
+                        foreach ($types as $type) {
+                            if (!in_array($type->questionLevelID, array_column($exam['results'], 'questionLevelID'))) {
+                                $exam['results'][] = [
+                                    'value_tes' => 0,
+                                    'questionLevelID' => $type->questionLevelID,
+                                ];
+                            }
+                        }
+                    }
+                }
+
+                // Set final scores based on dataEndReport and dataTotalReport
+                foreach ($dataEndReport as $nilaiakhir) {
+                    if ($nilaiakhir['userID'] == $user->studentID) {
+                        $user_data['nilai_akhir'] = $nilaiakhir['nilai_akhir'];
                         break;
                     }
                 }
-    
-                // If examID doesn't exist, create a new entry
-                if (!$examIDExists) {
-                    $user_data['result_test'][] = [
-                        'name' => 'Hasil Exam',
-                        'examID' => $data['examID'],
-                        'results' => [[
-                            'value_tes' => $data['value'],
-                            'questionLevelID' => $data['questionLevelID'],
-                        ]],
-                    ];
-                }
-            }
-        }
-    
-        // Calculate totals and averages while constructing the summary
-        foreach ($user_data['result_test'] as &$exam) {
-            $totalValue = array_sum(array_column($exam['results'], 'value_tes'));
-            // var_dump($totalValue);
-            // exit;
-            $count = count($exam['results']);
 
-            $positiveValueCount = count(array_filter($exam['results'], function($value) {
-                return $value > 0;
-            }));
-
-            $averageValue = 0;
-            if($positiveValueCount != 0){
-                $averageValue = $positiveValueCount > 0 ? $totalValue / $positiveValueCount : 0;
-            }
-            // $averageValue = $count > 0 ? $totalValue / $count : 0;
-    
-            // Add summary directly to the exam
-            $exam['summary'] = [
-                'total' => $totalValue,
-                'average' => number_format($averageValue, 4),
-            ];
-    
-            // Ensure each examID has the correct number of results
-            $currentResultsCount = count($exam['results']);
-            if ($currentResultsCount < count($types)) {
-                foreach ($types as $type) {
-                    if (!in_array($type->questionLevelID, array_column($exam['results'], 'questionLevelID'))) {
-                        $exam['results'][] = [
-                            'value_tes' => 0,
-                            'questionLevelID' => $type->questionLevelID,
-                        ];
+                foreach ($dataTotalReport as $totalnilaiakhir) {
+                    if ($totalnilaiakhir['userID'] == $user->studentID) {
+                        $user_data['total_akhir'] = $totalnilaiakhir['total_akhir'];
+                        break;
                     }
                 }
-            }
-        }
-    
-        // Set final scores based on dataEndReport and dataTotalReport
-        foreach ($dataEndReport as $nilaiakhir) {
-            if ($nilaiakhir['userID'] == $user->studentID) {
-                $user_data['nilai_akhir'] = $nilaiakhir['nilai_akhir'];
-                break;
-            }
-        }
-    
-        foreach ($dataTotalReport as $totalnilaiakhir) {
-            if ($totalnilaiakhir['userID'] == $user->studentID) {
-                $user_data['total_akhir'] = $totalnilaiakhir['total_akhir'];
-                break;
-            }
-        }
 
-    
-        // Add penilaian to the user data
-        $user_data['result_test']['penilaian'] = $dataPenilaian;
-    
-        // Add user_data to final results
-        $results[] = $user_data;
-    }
-        // Create a new Spreadsheet object
-        // Create a new Spreadsheet object
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        
-        // Set header row
-        $sheet->setCellValue('A1', 'No');
-        $sheet->setCellValue('B1', 'Nama');
-        
-        // Set subtype headers
-        $col = 'C';
-        foreach ($types as $type) {
-            $sheet->setCellValue($col . '1', $type->name);
-            $col++;
-        }
-        
-        // Add header for Total Akhir and Nilai Akhir
-        $sheet->setCellValue($col . '1', 'Total Akhir');
-        $col++; // Move to the next column
-        $sheet->setCellValue($col . '1', 'Nilai Akhir');
-        $row = 2; // Starting row for data
-        
-        // Set data rows
-        foreach ($results as $i => $result) {
-            $sheet->setCellValue('A' . $row, $i + 1);
-            $sheet->setCellValue('B' . $row, $result['name']);
-        
-            // Set values for types
+
+                // Add penilaian to the user data
+                $user_data['result_test']['penilaian'] = $dataPenilaian;
+
+                // Add user_data to final results
+                $results[] = $user_data;
+            }
+            // Create a new Spreadsheet object
+            // Create a new Spreadsheet object
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set header row
+            $sheet->setCellValue('A1', 'No');
+            $sheet->setCellValue('B1', 'Nama');
+
+            // Set subtype headers
             $col = 'C';
-            foreach ($result['types'] as $type) {
-                $sheet->setCellValue($col . $row, $type['value']);
+            foreach ($types as $type) {
+                $sheet->setCellValue($col . '1', $type->name);
                 $col++;
             }
-        
-            // Set total akhir
-            $sheet->setCellValue($col . $row, round($result['summary'][0]['total'], 2));
-            $col++; // Move to the next column for nilai akhir
-        
-            // Set nilai akhir
-            $sheet->setCellValue($col . $row, round($result['summary'][0]['average'], 2));
-            
-            // Increment row for the next entry
-            $row++;
-        
-            // Nested table (result_test)
-            foreach ($result['result_test'] as $resultTes) {
-                if (!empty($resultTes['results'])) {
-                    // Add a new row for the result test
-                    $sheet->setCellValue('A' . $row, ''); // No for nested table (optional)
-                    $sheet->setCellValue('B' . $row, $resultTes['name'] === "Atasan" ? "Bawahan" : ($resultTes['name'] === "Bawahan" ? "Atasan" : $resultTes['name']));
-                    $col = 'C';
-                    foreach ($resultTes['results'] as $hasil) {
-                        $sheet->setCellValue($col . $row, $hasil['value_tes']);
-                        $col++;
-                    }
-                    // Add summary for the test
-                    // $sheet->setCellValue($col . $row, round($resultTes['summary']['total'], 2)); // Total
-                    // $col++;
-                    // $sheet->setCellValue($col . $row, round($resultTes['summary']['average'], 2)); // Average
-                    // $row++;
-                }
-            }
-        
-            // Penilaian
-            if (!empty($result['result_test']['penilaian'])) {
-                foreach ($result['result_test']['penilaian'] as $hasilpenilaian) {
-                    // Add a new row for the total of penilaian
-                    $sheet->setCellValue('A' . $row, ''); // No for total
-                    $sheet->setCellValue('B' . $row, 'Total ' . ($hasilpenilaian['name'] === "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] === "Bawahan" ? "Atasan" : $hasilpenilaian['name'])));
-                    $col = 'C';
-                    
-                    foreach ($hasilpenilaian['value'] as $value) {
-                        $sheet->setCellValue($col . $row, round($value, 2));
-                        $col++;
-                    }
-        
-                    // Add total and average for penilaian
-                    $sheet->setCellValue($col . $row, round($hasilpenilaian['total'], 2)); // Total
+
+            // Add header for Total Akhir and Nilai Akhir
+            $sheet->setCellValue($col . '1', 'Total Akhir');
+            $col++; // Move to the next column
+            $sheet->setCellValue($col . '1', 'Nilai Akhir');
+            $row = 2; // Starting row for data
+
+            // Set data rows
+            foreach ($results as $i => $result) {
+                $sheet->setCellValue('A' . $row, $i + 1);
+                $sheet->setCellValue('B' . $row, $result['name']);
+
+                // Set values for types
+                $col = 'C';
+                foreach ($result['types'] as $type) {
+                    $sheet->setCellValue($col . $row, $type['value']);
                     $col++;
-                    $sheet->setCellValue($col . $row, round($hasilpenilaian['average'], 2)); // Average
-                    $row++;
-        
-                    $nomor = 1;
-                    // Make sure to include only the necessary details
-                    if (!empty($hasilpenilaian['detail'])) {
-                        foreach ($hasilpenilaian['detail'] as $datadetail) {
-                            $sheet->setCellValue('A' . $row, ''); // No for detail
-                            $sheet->setCellValue('B' . $row, ($hasilpenilaian['name'] == "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] == "Bawahan" ? "Atasan" : $hasilpenilaian['name'])) . ' ' . $nomor);
-                            $col = 'C';
-                            foreach ($datadetail as $value) {
-                                $sheet->setCellValue($col . $row, round($value, 2));
-                                $col++;
-                            }
-                            unset($hasilpenilaian['total']);
-                            unset($hasilpenilaian['average']);
-                            // var_dump($datadetail);
-                            // exit;
-                            // Add total and average for detail if needed
-                            // $sheet->setCellValue($col . $row, round($hasilpenilaian['total'], 2)); // Total
+                }
+
+                // Set total akhir
+                $sheet->setCellValue($col . $row, round($result['summary'][0]['total'], 2));
+                $col++; // Move to the next column for nilai akhir
+
+                // Set nilai akhir
+                $sheet->setCellValue($col . $row, round($result['summary'][0]['average'], 2));
+
+                // Increment row for the next entry
+                $row++;
+
+                // Nested table (result_test)
+                foreach ($result['result_test'] as $resultTes) {
+                    if (!empty($resultTes['results'])) {
+                        // Add a new row for the result test
+                        $sheet->setCellValue('A' . $row, ''); // No for nested table (optional)
+                        $sheet->setCellValue('B' . $row, $resultTes['name'] === "Atasan" ? "Bawahan" : ($resultTes['name'] === "Bawahan" ? "Atasan" : $resultTes['name']));
+                        $col = 'C';
+                        foreach ($resultTes['results'] as $hasil) {
+                            $sheet->setCellValue($col . $row, $hasil['value_tes']);
                             $col++;
-                            // $sheet->setCellValue($col . $row, round($hasilpenilaian['average'], 2)); // Average
-                            $row++;
-                            $nomor++;
+                        }
+                        // Add summary for the test
+                        // $sheet->setCellValue($col . $row, round($resultTes['summary']['total'], 2)); // Total
+                        // $col++;
+                        // $sheet->setCellValue($col . $row, round($resultTes['summary']['average'], 2)); // Average
+                        // $row++;
+                    }
+                }
+
+                // Penilaian
+                if (!empty($result['result_test']['penilaian'])) {
+                    foreach ($result['result_test']['penilaian'] as $hasilpenilaian) {
+                        // Add a new row for the total of penilaian
+                        $sheet->setCellValue('A' . $row, ''); // No for total
+                        $sheet->setCellValue('B' . $row, 'Total ' . ($hasilpenilaian['name'] === "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] === "Bawahan" ? "Atasan" : $hasilpenilaian['name'])));
+                        $col = 'C';
+
+                        foreach ($hasilpenilaian['value'] as $value) {
+                            $sheet->setCellValue($col . $row, round($value, 2));
+                            $col++;
+                        }
+
+                        // Add total and average for penilaian
+                        $sheet->setCellValue($col . $row, round($hasilpenilaian['total'], 2)); // Total
+                        $col++;
+                        $sheet->setCellValue($col . $row, round($hasilpenilaian['average'], 2)); // Average
+                        $row++;
+
+                        $nomor = 1;
+                        // Make sure to include only the necessary details
+                        if (!empty($hasilpenilaian['detail'])) {
+                            foreach ($hasilpenilaian['detail'] as $datadetail) {
+                                $sheet->setCellValue('A' . $row, ''); // No for detail
+                                $sheet->setCellValue('B' . $row, ($hasilpenilaian['name'] == "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] == "Bawahan" ? "Atasan" : $hasilpenilaian['name'])) . ' ' . $nomor);
+                                $col = 'C';
+                                foreach ($datadetail as $value) {
+                                    $sheet->setCellValue($col . $row, round($value, 2));
+                                    $col++;
+                                }
+                                unset($hasilpenilaian['total']);
+                                unset($hasilpenilaian['average']);
+                                // var_dump($datadetail);
+                                // exit;
+                                // Add total and average for detail if needed
+                                // $sheet->setCellValue($col . $row, round($hasilpenilaian['total'], 2)); // Total
+                                $col++;
+                                // $sheet->setCellValue($col . $row, round($hasilpenilaian['average'], 2)); // Average
+                                $row++;
+                                $nomor++;
+                            }
                         }
                     }
                 }
             }
-        }
-        
-        // Set column widths for better readability
-        foreach (range('A', $col) as $columnID) {
-            $sheet->getColumnDimension($columnID)->setAutoSize(true);
-        }
-        
-        // Create Excel file
-        $writer = new Xlsx($spreadsheet);
-        $filename = 'report.xlsx';
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
-        header('Cache-Control: max-age=0');
-        $writer->save('php://output');
-        
+
+            // Set column widths for better readability
+            foreach (range('A', $col) as $columnID) {
+                $sheet->getColumnDimension($columnID)->setAutoSize(true);
+            }
+
+            // Create Excel file
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'report.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            $writer->save('php://output');
 
 
 
-    // $spreadsheet = new Spreadsheet();
-    // $sheet = $spreadsheet->getActiveSheet();
 
-    // // Set the headers
-    // $rowIndex = 1;
-    // $colIndex = 'A';
+            // $spreadsheet = new Spreadsheet();
+            // $sheet = $spreadsheet->getActiveSheet();
 
-    // $sheet->setCellValue($colIndex . $rowIndex, 'Name');
-    // $colIndex++;
+            // // Set the headers
+            // $rowIndex = 1;
+            // $colIndex = 'A';
 
-    // foreach ($types as $type) {
-    //     $sheet->setCellValue($colIndex . $rowIndex, $type->name);
-    //     $colIndex++;
-    // }
+            // $sheet->setCellValue($colIndex . $rowIndex, 'Name');
+            // $colIndex++;
 
-    // $sheet->setCellValue($colIndex . $rowIndex, 'Final Score');
-    // $rowIndex++; // Move to the next row for data
+            // foreach ($types as $type) {
+            //     $sheet->setCellValue($colIndex . $rowIndex, $type->name);
+            //     $colIndex++;
+            // }
 
-    // // Loop through each user and their corresponding data
-    // foreach ($results as $user_data) {
-    //     $colIndex = 'A';
-    //     $sheet->setCellValue($colIndex . $rowIndex, $user_data['name']);
-    //     $colIndex++;
+            // $sheet->setCellValue($colIndex . $rowIndex, 'Final Score');
+            // $rowIndex++; // Move to the next row for data
 
-    //     // Fill type values
-    //     foreach ($user_data['types'] as $type_data) {
-    //         $sheet->setCellValue($colIndex . $rowIndex, $type_data['value']);
-    //         $colIndex++;
-    //     }
+            // // Loop through each user and their corresponding data
+            // foreach ($results as $user_data) {
+            //     $colIndex = 'A';
+            //     $sheet->setCellValue($colIndex . $rowIndex, $user_data['name']);
+            //     $colIndex++;
 
-    //     // Add final score if available
-    //     $sheet->setCellValue($colIndex . $rowIndex, round($user_data['nilai_akhir'], 2) ?? 0);
-    //     $rowIndex++; // Move to the next row for result_test
+            //     // Fill type values
+            //     foreach ($user_data['types'] as $type_data) {
+            //         $sheet->setCellValue($colIndex . $rowIndex, $type_data['value']);
+            //         $colIndex++;
+            //     }
 
-    //     // Add result_test data
-    //     $examData = []; // Array to hold exam data
+            //     // Add final score if available
+            //     $sheet->setCellValue($colIndex . $rowIndex, round($user_data['nilai_akhir'], 2) ?? 0);
+            //     $rowIndex++; // Move to the next row for result_test
 
-    //     // Collect the exam data for comparison
-    //     foreach ($user_data['result_test'] as $exam) {
-    //         $examData[] = $exam; // Store each exam for later processing
-    //     }
+            //     // Add result_test data
+            //     $examData = []; // Array to hold exam data
 
-    //     // Sort exams by examID in ascending order
-    //     usort($examData, function($a, $b) {
-    //         return $a['examID'] <=> $b['examID']; // Ascending order
-    //     });
+            //     // Collect the exam data for comparison
+            //     foreach ($user_data['result_test'] as $exam) {
+            //         $examData[] = $exam; // Store each exam for later processing
+            //     }
 
-    //     // Prepare to set values in the spreadsheet
-    //     $totalScores = []; // Initialize an array to hold total scores
+            //     // Sort exams by examID in ascending order
+            //     usort($examData, function($a, $b) {
+            //         return $a['examID'] <=> $b['examID']; // Ascending order
+            //     });
 
-    //     foreach ($examData as $index => $exam) {
-    //         $colIndex = 'A';
+            //     // Prepare to set values in the spreadsheet
+            //     $totalScores = []; // Initialize an array to hold total scores
 
-    //         // Set the Exam ID in the first column with proper labeling
-    //         if ($index === 0) {
-    //             $sheet->setCellValue($colIndex . $rowIndex, 'Exam Pertama: ID ' . $exam['examID']);
-    //         } elseif ($index === 1) {
-    //             $sheet->setCellValue($colIndex . $rowIndex, 'Exam Kedua: ID ' . $exam['examID']);
-    //         }
+            //     foreach ($examData as $index => $exam) {
+            //         $colIndex = 'A';
 
-    //         $colIndex++; // Move to the next column
+            //         // Set the Exam ID in the first column with proper labeling
+            //         if ($index === 0) {
+            //             $sheet->setCellValue($colIndex . $rowIndex, 'Exam Pertama: ID ' . $exam['examID']);
+            //         } elseif ($index === 1) {
+            //             $sheet->setCellValue($colIndex . $rowIndex, 'Exam Kedua: ID ' . $exam['examID']);
+            //         }
 
-    //         // Set values for this exam's results
-    //         foreach ($exam['results'] as $result) {
-    //             $value = round($result['value_tes'], 2) ?? 0;
-    //             $sheet->setCellValue($colIndex . $rowIndex, $value);
-    //             $totalScores[] = $value; // Accumulate total scores
-    //             $colIndex++;
-    //         }
+            //         $colIndex++; // Move to the next column
 
-    //         $rowIndex++; // Move to the next row for the next exam data
+            //         // Set values for this exam's results
+            //         foreach ($exam['results'] as $result) {
+            //             $value = round($result['value_tes'], 2) ?? 0;
+            //             $sheet->setCellValue($colIndex . $rowIndex, $value);
+            //             $totalScores[] = $value; // Accumulate total scores
+            //             $colIndex++;
+            //         }
 
-    //         // Add detailed results below each exam
-    //         foreach ($exam['results'] as $result) {
-    //             $colIndex = 'A'; // Reset column index for details
-    //             $sheet->setCellValue($colIndex . $rowIndex, 'Detail:'); // Add label for Detail
-    //             $colIndex++;
+            //         $rowIndex++; // Move to the next row for the next exam data
 
-    //             // Assuming each result has a 'questionLevelID' for more details, adjust as necessary
-    //             $sheet->setCellValue($colIndex . $rowIndex, 'Question Level ID: ' . $result['questionLevelID']);
-    //             $colIndex++;
+            //         // Add detailed results below each exam
+            //         foreach ($exam['results'] as $result) {
+            //             $colIndex = 'A'; // Reset column index for details
+            //             $sheet->setCellValue($colIndex . $rowIndex, 'Detail:'); // Add label for Detail
+            //             $colIndex++;
 
-    //             // Add additional details if available
-    //             $sheet->setCellValue($colIndex . $rowIndex, 'Score: ' . $value);
-    //             $colIndex++;
+            //             // Assuming each result has a 'questionLevelID' for more details, adjust as necessary
+            //             $sheet->setCellValue($colIndex . $rowIndex, 'Question Level ID: ' . $result['questionLevelID']);
+            //             $colIndex++;
 
-    //             $rowIndex++; // Move to the next row for the next detail
-    //         }
+            //             // Add additional details if available
+            //             $sheet->setCellValue($colIndex . $rowIndex, 'Score: ' . $value);
+            //             $colIndex++;
 
-    //         // Limit to 2 rows for nested data
-    //         if ($index >= 1) {
-    //             break;
-    //         }
-    //     }
+            //             $rowIndex++; // Move to the next row for the next detail
+            //         }
 
-    //     // Add Total Row
-    //     $colIndex = 'A'; // Reset column index for Total row
-    //     $sheet->setCellValue($colIndex . $rowIndex, 'Total'); // Add label for Total
-    //     $colIndex++;
+            //         // Limit to 2 rows for nested data
+            //         if ($index >= 1) {
+            //             break;
+            //         }
+            //     }
 
-    //     // Calculate and set total for each type of exam
-    //     foreach ($totalScores as $score) {
-    //         $sheet->setCellValue($colIndex . $rowIndex, round($score, 2)); // Set each total value
-    //         $colIndex++;
-    //     }
+            //     // Add Total Row
+            //     $colIndex = 'A'; // Reset column index for Total row
+            //     $sheet->setCellValue($colIndex . $rowIndex, 'Total'); // Add label for Total
+            //     $colIndex++;
 
-    //     $rowIndex++; // Move to the next row for the next user
-    // }
+            //     // Calculate and set total for each type of exam
+            //     foreach ($totalScores as $score) {
+            //         $sheet->setCellValue($colIndex . $rowIndex, round($score, 2)); // Set each total value
+            //         $colIndex++;
+            //     }
 
-    // // Output the Excel file
-    // header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    // header('Content-Disposition: attachment;filename="student_report.xlsx"');
-    // header('Cache-Control: max-age=0');
+            //     $rowIndex++; // Move to the next row for the next user
+            // }
 
-    // $writer = new Xlsx($spreadsheet);
-    // $writer->save('php://output');
-    exit;
+            // // Output the Excel file
+            // header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            // header('Content-Disposition: attachment;filename="student_report.xlsx"');
+            // header('Cache-Control: max-age=0');
 
-            
+            // $writer = new Xlsx($spreadsheet);
+            // $writer->save('php://output');
+            exit;
         } catch (\PhpOffice\PhpSpreadsheet\Exception $e) {
             echo 'Error creating spreadsheet: ',  $e->getMessage();
         } catch (\Exception $e) {
@@ -1156,7 +1200,7 @@ class Idcardreport extends Admin_Controller
         }
     }
 
-    
+
 
     public function getIdcardReport()
     {
@@ -1305,6 +1349,120 @@ class Idcardreport extends Admin_Controller
         }
     }
 
+    public function update_insert_question()
+    {
+        $data = $this->input->post('data');
+        $userID       = $this->session->userdata("loginuserID");
+        $response = [];
+        // Dump => array(4) {
+        //     [0] => array(4) {
+        //       ["questionLevelReportID"] => string(2) "14"
+        //       ["answer"] => string(1) "4"
+        //       ["optionID"] => string(3) "114"
+        //       ["answerID"] => string(3) "154"
+        //     }
+        //     [1] => array(4) {
+        //       ["questionLevelReportID"] => string(2) "15"
+        //       ["answer"] => string(1) "5"
+        //       ["optionID"] => string(3) "115"
+        //       ["answerID"] => string(3) "155"
+        //     }
+        //     [2] => array(4) {
+        //       ["questionLevelReportID"] => string(2) "16"
+        //       ["answer"] => string(2) "53"
+        //       ["optionID"] => string(3) "116"
+        //       ["answerID"] => string(3) "156"
+        //     }
+        //     [3] => array(4) {
+        //       ["questionLevelReportID"] => string(2) "17"
+        //       ["answer"] => string(2) "23"
+        //       ["optionID"] => string(3) "117"
+        //       ["answerID"] => string(3) "157"
+        //     }
+        //   }
+
+        // insert into 
+        $this->db->trans_begin();
+        try {
+            $answer_ids = $option_ids = [];
+            foreach ($data as $key => $value) {
+                $report = $this->question_level_report_m->get_single_data([
+                    'questionLevelReportID' => $value['questionLevelReportID']
+                ]);
+
+                // insert into online_exam_user_answer_m
+                $dt = $this->online_exam_user_answer_m->get_single_online_exam_user_answer(
+                    [
+                        'onlineExamUserAnswerID' => $value['answerID']
+                    ]
+                );
+                $this->online_exam_user_answer_m->insert([
+                    'onlineExamQuestionID' => $dt->onlineExamQuestionID,
+                    'userID'               => $userID,
+                    'onlineExamID'         => $dt->onlineExamID,
+                    'examtimeID'           => $dt->examtimeID,
+                    'relasi_jabatan'       => $dt->relasi_jabatan,
+                ]);
+                $answer_ids[] = $this->db->insert_id();
+
+                // insert into online_exam_user_answer_option_m
+                $option = $this->online_exam_user_answer_option_m->get_single_online_exam_user_answer_option(
+                    [
+                        'onlineExamUserAnswerOptionID'=>$value['optionID']
+                    ]
+                );
+                $this->online_exam_user_answer_option_m->insert([
+                    'questionID'           => $option->questionID,
+                    'typeID'               => $option->typeID,
+                    'text'                 => $value['answer'],
+                    'time'                 => date("Y-m-d h:i:s"),
+                    'onlineExamID'         => $option->onlineExamID,
+                    'examtimeID'           => $option->examtimeID,
+                    'userID'               => $userID,
+                    'relasi_jabatan'       => $option->relasi_jabatan,
+                    'fileAnswer'           => $option->fileAnswer
+                ]);
+                $option_ids[] = $this->db->insert_id();
+                
+
+                // insert into question_level_report_m
+                $this->question_level_report_m->insert([
+                    'questionLevelID' => $report->questionLevelID,
+                    'value' => $value['answer'],
+                    'groupID' => $report->groupID,
+                    'userID' => $userID,
+                    'examID' => $report->examID,
+                    'questionID' => $report->questionID,
+                    'onlineExamUserAnswerOptionID' => $option_ids[$key],
+                    'onlineExamUserAnswerID' => $answer_ids[$key],
+                ]);
+            }
+            
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+                $response = [
+                    'success'=>false,
+                ];
+            }else{
+                $this->db->trans_commit();
+            }
+            $response = [
+                'success'=>true,
+            ];
+
+        } catch (Exception $e) {
+            // Catch any exceptions and rollback the transaction
+            $this->db->trans_rollback();
+            log_message('error', $e->getMessage()); // Log the error message for debugging
+            $response = [
+                'success'=>false,
+                'message'=> $e->getMessage(),
+            ];
+        }
+
+        echo json_encode($response);
+        exit;
+    }
 }
 
 /* End of file activities.php */

@@ -221,24 +221,24 @@ echo form_dropdown("type", $array, set_value("type"), "id='type' class='form-con
                     </div>
 
                     <?php
-if (form_error('totalOption')) {
-    echo "<div class='form-group has-error' id='totalOptionDiv'>";
-} else {
-    echo "<div class='form-group' id='totalOptionDiv'>";
-}
+                        if (form_error('totalOption')) {
+                            echo "<div class='form-group has-error' id='totalOptionDiv'>";
+                        } else {
+                            echo "<div class='form-group' id='totalOptionDiv'>";
+                        }
 
-?>
+                        ?>
                         <label for="totalOption" class="col-sm-2 control-label" >
                             <?=$this->lang->line("question_bank_totalOption")?><span class='text-red'>*</span>
                         </label>
                         <div class="col-sm-6">
                             <?php
-$array = array(0 => $this->lang->line("question_bank_select"));
-foreach (range(1, 10) as $i) {
-    $array[$i] = $i;
-}
-echo form_dropdown("totalOption", $array, set_value("totalOption"), "id='totalOption' class='form-control select2'");
-?>
+                                $array = array(0 => $this->lang->line("question_bank_select"));
+                                foreach (range(1, 10) as $i) {
+                                    $array[$i] = $i;
+                                }
+                                echo form_dropdown("totalOption", $array, set_value("totalOption"), "id='totalOption' class='form-control select2'");
+                                ?>
                         </div>
                         <span class="col-sm-4 control-label">
                             <?php echo form_error('totalOption'); ?>
@@ -359,7 +359,7 @@ echo form_dropdown("totalOption", $array, set_value("totalOption"), "id='totalOp
     $('#type').change(function() {
         $('#in').children().remove();
         var type = $(this).val();
-        if(type == 0) {
+        if(type == 0 || type == 5) {
             $('#totalOptionDiv').hide();
         } else {
             $('#totalOption').val(0);
@@ -431,8 +431,8 @@ echo form_dropdown("totalOption", $array, set_value("totalOption"), "id='totalOp
 
             return html;
         }else if(type == 5) {
-            var html = '';
-           return html;
+            var html = '<div class="form-group coption"><label for="answer'+id+'" class="col-sm-2 control-label"><?=$this->lang->line("question_bank_answer")?> '+ id +'</label><div class="col-sm-4"><input type="text" class="form-control" id="answer'+id+'" name="answer[]" value="'+value+'" placeholder="<?=$this->lang->line("question_bank_answer")?> '+id+'" ></div><div class="col-sm-1"></div><span class="col-sm-4 control-label text-red" id="anserror'+id+'"><?php if (isset($form_validation['answer1'])) {echo $form_validation['answer1'];}?></span></div>';
+            return html;
 
         }
         var html = '<div class="form-group coption"><label for="option'+id+'" class="col-sm-2 control-label"><?=$this->lang->line("question_bank_option")?> '+ id +'</label><div class="col-sm-4" style="display:inline-table"><input type="text" class="form-control" id="option'+id+'" name="option[]" value="'+value+'" placeholder="<?=$this->lang->line("question_bank_option")?> '+id+'" ><span class="input-group-addon"><input class="answer" id="ans'+id+'" '+checked+' type="'+type+'" name="answer[]" value="'+id+'" data-toggle="tooltip" data-placement="top" title="Correct Answer" '+ required +' /></span></div><div class="col-sm-3" style="display:inline-table"><input type="file" name="image'+id+'" id="image'+id+'"></div><span class="col-sm-3 control-label text-red" id="anserror'+id+'"><?php if (isset($form_validation['answer1'])) {echo $form_validation['answer1'];}?></span></div>';

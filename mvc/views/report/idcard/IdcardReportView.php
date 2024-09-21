@@ -11,175 +11,28 @@
         <div class="row">
 
             <div class="col-sm-12">
-            <!-- <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
-                <thead>
-                    <tr>
-                        <th class="col-sm-1">No</th>
-                        <th class="col-sm-2">Nama</th>
-                        <?php foreach($subtype as $type){ ?>
-                            <th class="col-sm-2"><?=$type->name?></th>
-                        <?php }?>
-                        <th class="col-sm-2">Nilai Akhir</th>
-                        <th class="col-sm-1">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php
-                    $i = 1; foreach($results as $result) {
-                    
-                    ?>
-                        <tr>
-                            <td data-title="id">
-                                <?php echo $i; ?>
-                            </td>
-                            <td data-title="namaKaryawan">
-                                <?=$result['name']?>
-                            </td>
-                            <?php foreach($result['types'] as $type){ ?>
-                                <td><?=$type['value']?></td>
-                            <?php } ?>
-                            <td><?= round($result['nilai_akhir'], 2) ?></td>
-                            <td>
-                                <button class="btn btn-primary" data-toggle="collapse" data-target="#nested-table-<?=$i?>"><i class="fa fa-eye"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="<?= count($subtype) + 4 ?>" class="hiddenRow">
-                                <div class="collapse" id="nested-table-<?=$i?>">
-                                    <table class="table table-bordered table-hover nested-table">
-                                        <thead>
-                                            <tr>
-                                            <th class="col-sm-1">No</th>
-                                            <?php  foreach($subtype as $type){ ?>
-                                                <th class="col-sm-2"><?=$type->name?></th>
-                                            <?php }?>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $no = 1; foreach($result['result_test'] as $resultTes){ ?>
-                                            <tr>
-                                                <td><?= $no?></td>
-                                                <?php foreach($resultTes['results'] as $hasil){ ?>
-                                                    <td><?= $hasil['value_tes']?></td>
-                                                <?php } ?>
-                                            </tr>
-                                            <?php $no++; }?>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php $i++; } ?>
-                </tbody>
-            </table> -->
             <button class="button btn btn-primary"><a class="text-white" href="<?=base_url('idcardreport/getReport')?>">Print</a></button>
             <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr>
-                        <th class="col-sm-1">No</th>
-                        <th class="col-sm-2">Nama</th>
-                        <?php foreach($subtype as $type){ ?>
-                            <th class="col-sm-2"><?=$type->name?></th>
-                        <?php }?>
-                        <th class="col-sm-2">Total Score</th>
-                        <th class="col-sm-2">Final Score</th>
-                        <th class="col-sm-1">Action</th>
+                        <th width="2%">No</th>
+                        <th width="50%">Nama</th>
+                        <th width="40%">Total Dijawab</th>
+                        <th class="hidden"></th>
+                        <th >Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $i = 1; foreach($results as $result) {
+                    $i = 1; foreach($results as $key => $result) {
                     ?>
                         <tr>
                             <td data-title="id"><?php echo $i; ?></td>
                             <td data-title="namaKaryawan"><?=$result['name']?></td>
-                            <?php foreach($result['types'] as $type){ ?>
-                                <td><?=$type['value']?></td>
-                            <?php } ?>
-                            <td><?= round($result['summary'][0]['total'], 2) ?></td>
-                            <td><?= round($result['summary'][0]['average'], 2) ?></td>
+                            <td><?= $result['total'] ?></td>
+                            <td class="hidden"><?=$key?></td>
                             <td>
-                                <button class="btn btn-primary showDetails" data-toggle="collapse" data-target="#nested-table-<?=$i?>"><i class="fa fa-eye"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="<?= count($subtype) + 4 ?>" class="hiddenRow">
-                                <div class="collapse" id="nested-table-<?=$i?>">
-                                    <table id="nested-table-<?=$i?>-inner" class="table table-bordered table-hover nested-table">
-                                        <thead>
-                                            <tr>
-                                                <th class="col-sm-1">No</th>
-                                                <th class="col-sm-1">Nama</th>
-                                                <?php  foreach($subtype as $type){ ?>
-                                                    <th class="col-sm-2"><?=$type->name?></th>
-                                                <?php }?>
-                                                <th class="col-sm-2">Total Score</th>
-                                                <th class="col-sm-2">Final Score</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <?php
-                                            $no = 1; 
-                                            // var_dump($results[1]);
-                                            //     exit;
-                                            foreach ($result['result_test'] as $resultTes) {
-                                                
-                                                if (!empty($resultTes['results'])) {
-                                                    ?>
-                                                    <tr>
-                                                        <td><?= $no ?></td>
-                                                        <td><?= $resultTes['name'] ?></td>
-                                                        <?php foreach ($resultTes['results'] as $hasil) { ?>
-                                                            <td><?= $hasil['value_tes'] ?></td>
-                                                        <?php } ?>
-                                                        <td><?=$resultTes['summary']['total']?></td>
-                                                        <td><?=$resultTes['summary']['average']?></td>
-                                                    </tr>
-                                                    <?php 
-                                                    $no++;
-                                                }
-                                            } 
-                                            
-                                            
-                                            // Check if 'penilaian' is not empty before displaying
-                                            if (!empty($result['result_test']['penilaian'])) {
-                                                foreach ($result['result_test']['penilaian'] as $hasilpenilaian) {
-                                                    // var_dump($hasilpenilaian);
-                                                    // exit;
-                                                    ?>
-                                                    <tr>
-                                                        <td><?= $no ?></td>
-                                                        <td><?= 'Total ' . ($hasilpenilaian['name'] === "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] === "Bawahan" ? "Atasan" : $hasilpenilaian['name'])); ?></td>
-                                                        <?php foreach ($hasilpenilaian['value'] as $value) { ?>
-                                                            <td><?= round($value,2) ?></td>
-                                                        <?php } ?>
-                                                        <td><?= round($hasilpenilaian['total'],2) ?></td>
-                                                        <td><?= round($hasilpenilaian['average'],2) ?></td>
-                                                    </tr>
-                                                    <?php 
-                                                    $no++; 
-                                                    $nomor = 1;
-                                                    foreach($hasilpenilaian['detail'] as $datadetail){
-                                                        ?>
-                                                        <tr>
-                                                            <td><?= $nomor ?></td>
-                                                            <td><?= ($hasilpenilaian['name'] === "Atasan" ? "Bawahan" : ($hasilpenilaian['name'] === "Bawahan" ? "Atasan" : $hasilpenilaian['name'])) . ' ' . $nomor; ?></td>
-                                                            <?php foreach ($datadetail as $value) { ?>
-                                                                <td><?= round($value,2) ?></td>
-                                                            <?php } ?>
-                                                        </tr>
-                                                        <?php 
-                                                        $nomor++;
-                                                    
-                                                    }
-                                                }
-                                            }
-                                            ?>
-                                        </tbody>
-
-                                    </table>
-                                </div>
+                                <button class="btn btn-primary showDetails"><i class="fa fa-eye"></i></button>
                             </td>
                         </tr>
                     <?php $i++; }
@@ -193,23 +46,141 @@
 </div><!-- /.box -->
 
 <div id="load_idcardreport"></div>
+<!-- Jquery datatable tools js -->
+<script type="text/javascript" src="<?php echo base_url('assets/datatables/tools/jquery.dataTables.min.js'); ?>"></script>
+<script type="text/javascript" src="<?php echo base_url('assets/datatables/tools/dataTables.buttons.min.js'); ?>"></script>
+<!-- dataTables Tools / -->
+<script type="text/javascript" src="<?php echo base_url('assets/datatables/dataTables.bootstrap.js'); ?>"></script>
 
 <script>
-        $(document).ready(function () {
-            // $('[data-toggle="collapse"]').click(function () {
-            //     var target = $(this).data('target');
-            //     $(target).collapse('toggle');
-            // });
-            // $('.showDetails').on('click', function() {
-            //     var target = $(this).data('target');
-            //     $(target + '-inner').DataTable({
-            //     });
-            // });
-            
+    $(document).ready(function () {
+        var results = <?php echo json_encode($results)?>;
+        var parentTable = $('#example1').DataTable();
+        $('#example1 tbody').on('click', '.showDetails', function() {
+            var tr = $(this).closest('tr');
+            var row = parentTable.row(tr);
+            var dt = row.data();
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            } else {
+                row.child(formatDetails(dt[3])).show();
+                tr.addClass('shown');
+            }
         });
-    </script>
+
+        // Function to format the details to be displayed in the child row
+        function formatDetails(idx) {
+            var sub = results[idx]['detail'];
+            var template = ``
+            $.map(sub, function(val, i){
+                var nm = i.replaceAll(" ","_");
+
+                // Build the outer table with header
+                template += `
+                <table class='table'>
+                    <tr>
+                        <td class='col-sm-6' colspan=4>
+                            <h4 class='font-weight-bold'>${i}</h4>
+                        </td>
+                        <td class='col-sm-6 text-right'>
+                            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#multiCollapse${idx}-${nm}" aria-expanded="false" aria-controls="multiCollapse${idx}-${nm}">Detail <i class='fa fa-arrow-down'></i></button>
+                        </td>
+                    </tr>
+                </table>
+                `;
+                
+                // Create a collapsible section for each row of details
+                template += `
+                    <table class="table table-bordered collapse multi-collapse" id="multiCollapse${idx}-${nm}">
+                        <tbody>
+                `;
+
+                // Loop through the details in 'val' and generate table rows for each detail
+                $.map(val, function(detailVal, detailKey) {
+                    template += `
+                        <tr>
+                            <td>${detailVal.question}</td>
+                            <td>${detailVal.value}</td>
+                            <td>
+                                <input class='form-control' type="number" min='0' name="inputValue" value="" id="input_${detailVal.questionLevelReportID}" data-id="${detailVal.questionLevelReportID}" data-option='${detailVal.onlineExamUserAnswerOptionID}' data-answer='${detailVal.onlineExamUserAnswerID}'>
+                            </td>
+                            <td>
+                                <a class='${detailVal.fileAnswer ? '' : 'disabled'}' href="${detailVal.fileAnswer ? detailVal.fileAnswer : '#' }"><i class='fa fa-file'></i> ${detailVal.fileAnswer ? 'File' : 'No File'}</a>
+                            </td>
+                            <td class='col-sm-1'>
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                template += `
+                        <tr>
+                            <td colspan='4'></td>
+                            <td>
+                                <button class="btn btn-success" data-index='${idx}-${nm}'>Verifikasi</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                `;
+
+            });
+
+            return template;
+        }
+
+        $(document).on('click', '.btn-success', function() {
+            var idx = $(this).data('index');  // Or whatever index you need
+            verifikasi(idx);
+        });
+
+        function verifikasi(idx) {
+            var inputs = $(`#multiCollapse${idx} input[data-id]`);  // Select all inputs in the collapsed section
+            var dataToSend = [];
+
+            // Loop through inputs and collect values and IDs
+            inputs.each(function() {
+                var questionID = $(this).data('id');
+                var optionID = $(this).data('option');
+                var answerID = $(this).data('answer');
+                var value = $(this).val();
+                // console.log(optionID)
+
+                dataToSend.push({
+                    questionLevelReportID: questionID,
+                    answer: value,
+                    optionID : optionID,
+                    answerID:answerID,
+                });
+            });
+
+            $.ajax({
+                type: 'POST',
+                url: "<?=base_url('idcardreport/update_insert_question')?>",
+                data: {
+                    data: dataToSend
+                },
+                dataType: "html",
+                success: function(data) {
+                    var response = JSON.parse(data);
+                    console.log(response)
+                    if (response.success == true) {
+                        location.reload();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error while saving data:', error);
+                }
+            });
+        }
+
+        
+    });
+</script>
+
 <script type="text/javascript">
-    
     function printDiv(divID) {
         var oldPage = document.body.innerHTML;
         var divElements = document.getElementById(divID).innerHTML;

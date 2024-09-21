@@ -28,6 +28,8 @@ class Take_exam extends Admin_Controller
     public $online_exam_user_answer_option_m;
     public $online_exam_payment_m;
     public $instruction_m;
+    public $upload;
+    public $upload_data;
     /*
     | -----------------------------------------------------
     | PRODUCT NAME: 	INILABS SCHOOL MANAGEMENT SYSTEM
@@ -321,7 +323,7 @@ class Take_exam extends Admin_Controller
 
                 $this->data['onlineExamQuestions'] = $onlineExamQuestions;
                 $onlineExamQuestions               = pluck($onlineExamQuestions, 'obj', 'questionID');
-                $questionsBank                     = pluck($this->question_bank_m->get_order_by_question_bank(), 'obj', 'questionBankID');
+                $questionsBank                     = pluck($this->question_bank_m->get_where_in(array_keys($onlineExamQuestions), 'questionBankID'), 'obj', 'questionBankID');
                 $this->data['questions']           = $questionsBank;
 
                 // Initialize the new array to hold the results (as an array of objects)
@@ -334,7 +336,7 @@ class Take_exam extends Admin_Controller
                     $entry->idresult = $res->questionLevelID;
                     $entry->nameresult = $res->name;
                     $entry->detail_soal = [];
-
+                    
                     // Loop through each question in the questions bank
                     foreach ($questionsBank as $question) {
                         // Check if the levelID matches the questionLevelID
@@ -345,11 +347,12 @@ class Take_exam extends Admin_Controller
                     }
 
                     // Add the stdClass object to the new array
-                    $newArray[] = $entry;
+                    if(!empty($entry->detail_soal)){
+                        $newArray[] = $entry;
+                    }
                 }
 
                 $this->data['newArray'] = $newArray;
-
 
                 $options    = [];
                 $answers    = [];
@@ -374,109 +377,154 @@ class Take_exam extends Admin_Controller
                     $this->data['options'] = $options;
                     $this->data['answers'] = $answers;
                 }
+
+
+                /**
+                 * STORE DATA
+                 */
                 if ($_POST !== []) {
+                    // Start transaction
+                    $this->db->trans_begin();
 
-                    $time               = date("Y-m-d h:i:s");
-                    $mainQuestionAnswer = [];
-                    $userAnswer         = $this->input->post('answer');
-
-                    $questionStatus    = [];
-                    $correctAnswer     = 0;
-                    $totalQuestionMark = 0;
-                    $totalCorrectMark  = 0;
-                    $visited           = [];
-                    foreach ($allAnswers as $answer) {
-                        if ($answer->typeNumber == 3) {
-                            $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][$answer->answerID] = $answer->text;
-                        }else if($answer->typeNumber == 4){
-                            $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->nilaijawaban;
+                    try {
+                        $time               = date("Y-m-d h:i:s");
+                        $mainQuestionAnswer = [];
+                        $typeNumber         = null;
+                        $userAnswer         = $this->input->post('answer');
+                        $fileAnswer         = [];
+                        if(!empty($_FILES)){
+                            $fileAnswer = $_FILES['file'];
                         }
-                         else {
-                            $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->optionID;
-                        }
-                    }
+                        // dd($userAnswer);
 
-                    $totalAnswer = 0;
-                    if (inicompute($userAnswer)) {
-                        foreach ($userAnswer as $userAnswerKey => $uA) {
-                            $totalAnswer += inicompute($uA);
-                        }
-                    }
-
-
-                    if (inicompute($allOnlineExamQuestions)) {
-                        foreach ($allOnlineExamQuestions as $aoeq) {
-                            if (isset($questionsBank[$aoeq->questionID])) {
-                                if($questionsBank[$aoeq->questionID]->typeNumber == 4){
-                                    $totalQuestionMark -= $questionsBank[$aoeq->questionID]->mark;
-                                }
-                                $totalQuestionMark += $questionsBank[$aoeq->questionID]->mark;
+                        $questionStatus    = [];
+                        $correctAnswer     = 0;
+                        $totalQuestionMark = 0;
+                        $totalCorrectMark  = 0;
+                        $visited           = [];
+                        foreach ($allAnswers as $answer) {
+                            if ($answer->typeNumber == 3) {
+                                $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][$answer->answerID] = $answer->text;
+                            }else if($answer->typeNumber == 4){
+                                $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->nilaijawaban;
+                            }else if($answer->typeNumber == 5){
+                                $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->text;
+                            }else {
+                                $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->optionID;
                             }
                         }
-                    }
 
-                    $f        = 0;
-
-                    $examtime =  $this->db->select('examtimeID')->from('online_exam_user_status')
-                        ->where([
-                            'userID'       => $userID,
-                            'onlineExamID' => $onlineExamID
-                        ])
-                        ->limit('1')
-                        ->order_by('onlineExamUserStatus', 'DESC')
-                        ->get()->row();
-
-                    $examTimeCounter = 1;
-                    if (inicompute($examtime)) {
-                        $examTimeCounter = $examtime->examtimeID;
-                        $examTimeCounter++;
-                    }
-                    $this->data['attemptedID']     = $examTimeCounter;
-
-                    $statusID = 10;
-                    foreach ($mainQuestionAnswer as $typeID => $questions) {
-                        if (!isset($userAnswer[$typeID]))
-                            continue;
-                        foreach ($questions as $questionID => $options) {
-                            if (isset($onlineExamQuestions[$questionID])) {
-                                $onlineExamQuestionID   = $onlineExamQuestions[$questionID]->onlineExamQuestionID;
-                                $onlineExamUserAnswerID = $this->online_exam_user_answer_m->insert([
-                                    'onlineExamQuestionID' => $onlineExamQuestionID,
-                                    'userID'               => $userID,
-                                    'onlineExamID'         => $onlineExamID,
-                                    'examtimeID'           => $examTimeCounter,
-                                    'relasi_jabatan'       => $relasi,
-                                ]);
+                        $totalAnswer = 0;
+                        if (inicompute($userAnswer)) {
+                            foreach ($userAnswer as $userAnswerKey => $uA) {
+                                $totalAnswer += inicompute($uA);
                             }
+                        }
 
-                            if (isset($userAnswer[$typeID][$questionID])) {
-                                $totalCorrectMark += isset($questionsBank[$questionID]) ? $questionsBank[$questionID]->mark : 0;
 
-                                $questionStatus[$questionID] = 1;
-                                $correctAnswer++;
-                                $f = 1;
-                                if ($typeID == 3) {
-                                    foreach ($options as $answerID => $answer) {
-                                        $takeAnswer = strtolower((string) $answer);
-                                        $getAnswer  = isset($userAnswer[$typeID][$questionID][$answerID]) ? strtolower((string) $userAnswer[$typeID][$questionID][$answerID]) : '';
-                                        $this->online_exam_user_answer_option_m->insert([
-                                            'questionID'   => $questionID,
-                                            'typeID'       => $typeID,
-                                            'text'         => $getAnswer,
-                                            'time'         => $time,
-                                            'onlineExamID' => $onlineExamID,
-                                            'examtimeID'   => $examTimeCounter,
-                                            'userID'       => $userID,
-                                                'relasi_jabatan'       => $relasi,
-                                        ]);
-                                        if ($getAnswer !== $takeAnswer) {
-                                            $f = 0;
-                                        }
+                        if (inicompute($allOnlineExamQuestions)) {
+                            foreach ($allOnlineExamQuestions as $aoeq) {
+                                if (isset($questionsBank[$aoeq->questionID])) {
+                                    if($questionsBank[$aoeq->questionID]->typeNumber == 4){
+                                        $totalQuestionMark -= $questionsBank[$aoeq->questionID]->mark;
+                                    } else if($questionsBank[$aoeq->questionID]->typeNumber == 5){
+                                        $totalQuestionMark -= $questionsBank[$aoeq->questionID]->mark;
                                     }
-                                } elseif ($typeID == 1 || $typeID == 2) {
-                                    if (inicompute($options) != inicompute($userAnswer[$typeID][$questionID])) {
-                                        $f = 0;
-                                    } else {
+                                    $totalQuestionMark += $questionsBank[$aoeq->questionID]->mark;
+                                }
+                            }
+                        }
+
+                        $f        = 0;
+
+                        $examtime =  $this->db->select('examtimeID')->from('online_exam_user_status')
+                            ->where([
+                                'userID'       => $userID,
+                                'onlineExamID' => $onlineExamID
+                            ])
+                            ->limit('1')
+                            ->order_by('onlineExamUserStatus', 'DESC')
+                            ->get()->row();
+
+                        $examTimeCounter = 1;
+                        if (inicompute($examtime)) {
+                            $examTimeCounter = $examtime->examtimeID;
+                            $examTimeCounter++;
+                        }
+                        $this->data['attemptedID']     = $examTimeCounter;
+
+                        $statusID = 10;
+                        $user_options=[];
+                        $user_answer =[];
+                        foreach ($mainQuestionAnswer as $typeID => $questions) {
+                            if (!isset($userAnswer[$typeID]))
+                                continue;
+                            foreach ($questions as $questionID => $options) {
+                                if (isset($onlineExamQuestions[$questionID])) {
+                                    $onlineExamQuestionID   = $onlineExamQuestions[$questionID]->onlineExamQuestionID;
+                                    $this->online_exam_user_answer_m->insert([
+                                        'onlineExamQuestionID' => $onlineExamQuestionID,
+                                        'userID'               => $userID,
+                                        'onlineExamID'         => $onlineExamID,
+                                        'examtimeID'           => $examTimeCounter,
+                                        'relasi_jabatan'       => $relasi,
+                                    ]);
+                                    $user_answer[] = $this->db->insert_id();
+                                }
+                                if (isset($userAnswer[$typeID][$questionID])) {
+                                    $totalCorrectMark += isset($questionsBank[$questionID]) ? $questionsBank[$questionID]->mark : 0;
+
+                                    $questionStatus[$questionID] = 1;
+                                    $correctAnswer++;
+                                    $f = 1;
+                                    if ($typeID == 3) {
+                                        foreach ($options as $answerID => $answer) {
+                                            $takeAnswer = strtolower((string) $answer);
+                                            $getAnswer  = isset($userAnswer[$typeID][$questionID][$answerID]) ? strtolower((string) $userAnswer[$typeID][$questionID][$answerID]) : '';
+                                            $this->online_exam_user_answer_option_m->insert([
+                                                'questionID'   => $questionID,
+                                                'typeID'       => $typeID,
+                                                'text'         => $getAnswer,
+                                                'time'         => $time,
+                                                'onlineExamID' => $onlineExamID,
+                                                'examtimeID'   => $examTimeCounter,
+                                                'userID'       => $userID,
+                                                'relasi_jabatan'       => $relasi,
+                                            ]);
+                                            if ($getAnswer !== $takeAnswer) {
+                                                $f = 0;
+                                            }
+                                        }
+                                    } elseif ($typeID == 1 || $typeID == 2) {
+                                        if (inicompute($options) != inicompute($userAnswer[$typeID][$questionID])) {
+                                            $f = 0;
+                                        } else {
+                                            if (!isset($visited[$typeID][$questionID])) {
+                                                foreach ($userAnswer[$typeID][$questionID] as $userOption) {
+                                                    $this->online_exam_user_answer_option_m->insert([
+                                                        'questionID'   => $questionID,
+                                                        'optionID'     => $userOption,
+                                                        'typeID'       => $typeID,
+                                                        'time'         => $time,
+                                                        'onlineExamID' => $onlineExamID,
+                                                        'examtimeID'   => $examTimeCounter,
+                                                        'userID'       => $userID,
+                                                    'relasi_jabatan'       => $relasi,
+                                                    ]);
+                                                }
+                                                $visited[$typeID][$questionID] = 1;
+                                            }
+                                            foreach ($options as $answerID => $answer) {
+                                                if (!in_array($answer, $userAnswer[$typeID][$questionID])) {
+                                                    $f = 0;
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                    } elseif ($typeID == 4) {
+                                        $data = $this->question_option_m->get_answer_by_id($userAnswer[$typeID][$questionID][0]);
+                                        $totalQuestionMark += $data->nilaijawaban;
+                                        $correctAnswer++;
                                         if (!isset($visited[$typeID][$questionID])) {
                                             foreach ($userAnswer[$typeID][$questionID] as $userOption) {
                                                 $this->online_exam_user_answer_option_m->insert([
@@ -487,7 +535,7 @@ class Take_exam extends Admin_Controller
                                                     'onlineExamID' => $onlineExamID,
                                                     'examtimeID'   => $examTimeCounter,
                                                     'userID'       => $userID,
-                                                'relasi_jabatan'       => $relasi,
+                                                    'relasi_jabatan'       => $relasi,
                                                 ]);
                                             }
                                             $visited[$typeID][$questionID] = 1;
@@ -498,115 +546,165 @@ class Take_exam extends Admin_Controller
                                                 break;
                                             }
                                         }
-                                    }
-                                }elseif ($typeID == 4) {
-                                    $data = $this->question_option_m->get_answer_by_id($userAnswer[$typeID][$questionID][0]);
-                                    $totalQuestionMark += $data->nilaijawaban;
-                                    $correctAnswer++;
-                                    if (!isset($visited[$typeID][$questionID])) {
-                                        foreach ($userAnswer[$typeID][$questionID] as $userOption) {
-                                            $this->online_exam_user_answer_option_m->insert([
-                                                'questionID'   => $questionID,
-                                                'optionID'     => $userOption,
-                                                'typeID'       => $typeID,
-                                                'time'         => $time,
-                                                'onlineExamID' => $onlineExamID,
-                                                'examtimeID'   => $examTimeCounter,
-                                                'userID'       => $userID,
+                                    } elseif ($typeID == 5) {
+                                        foreach ($options as $answerID => $answer) {
+                                            $new_file = '';
+                                            if ($fileAnswer['name'][$typeID][$questionID] != "") {
+                                                $path = "./uploads/files/";
+                                                if (!is_dir($path)) {
+                                                    mkdir($path, 0755, true); // Create directory with 0755 permissions and recursive flag set to true
+                                                }
+                                                $file_name = $fileAnswer['name'][$typeID][$questionID];
+                                                $random = random19();
+                                                $makeRandom = hash('sha512', $random.$fileAnswer['name'][$typeID][$questionID].date('Y-M-d-H:i:s') . config_item("encryption_key"));
+                                                $file_name_rename = $makeRandom;
+                                                $explode = explode('.', (string) $file_name);
+                                                if(inicompute($explode) >= 2) {
+                                                    $new_file = $file_name_rename.'.'.end($explode);
+                                                    $config['upload_path'] = $path;
+                                                    $config['allowed_types'] = "pdf|jpg|jpeg|png";
+                                                    $config['file_name'] = $new_file;
+                                                    $config['max_size'] = (1024*20);
+                                                    $config['max_width'] = '3000';
+                                                    $config['max_height'] = '3000';
+                                                    $this->load->library('upload');
+                                                    $this->upload->initialize($config);
+    
+                                                    // Manually set the file data for this specific file
+                                                    $_FILES['single_file']['name'] = $fileAnswer['name'][$typeID][$questionID];
+                                                    $_FILES['single_file']['type'] = $fileAnswer['type'][$typeID][$questionID];
+                                                    $_FILES['single_file']['tmp_name'] = $fileAnswer['tmp_name'][$typeID][$questionID];
+                                                    $_FILES['single_file']['error'] = $fileAnswer['error'][$typeID][$questionID];
+                                                    $_FILES['single_file']['size'] = $fileAnswer['size'][$typeID][$questionID];
+    
+                                                    if(!$this->upload->do_upload("single_file")) {
+                                                        log_message('error', $this->upload->display_errors()); // Log the error message for debugging
+                                                        $this->form_validation->set_message("fileupload", $this->upload->display_errors());
+                                                    }else{
+                                                        $this->upload_data[$typeID][$questionID] =  $this->upload->data();
+                                                    } 
+                                                }
+                                            }
+
+                                            // save jawaban
+                                            $takeAnswer = strtolower((string) $answer);
+                                            $getAnswer  = isset($userAnswer[$typeID][$questionID]) ? strtolower((string) $userAnswer[$typeID][$questionID]) : '';
+                                            $insert_online_exam_user_answer_option_m = $this->online_exam_user_answer_option_m->insert([
+                                                'questionID'           => $questionID,
+                                                'typeID'               => $typeID,
+                                                'text'                 => $getAnswer,
+                                                'time'                 => $time,
+                                                'onlineExamID'         => $onlineExamID,
+                                                'examtimeID'           => $examTimeCounter,
+                                                'userID'               => $userID,
                                                 'relasi_jabatan'       => $relasi,
+                                                'fileAnswer'           => $new_file != '' ? $path.$new_file : null
                                             ]);
-                                        }
-                                        $visited[$typeID][$questionID] = 1;
-                                    }
-                                    foreach ($options as $answerID => $answer) {
-                                        if (!in_array($answer, $userAnswer[$typeID][$questionID])) {
-                                            $f = 0;
-                                            break;
+                                            $user_options[] = $this->db->insert_id();
                                         }
                                     }
-                                }
 
-                                if ($f === 0) {
-                                    $questionStatus[$questionID] = 0;
-                                    $correctAnswer--;
-                                    $totalCorrectMark -= $questionsBank[$questionID]->mark;
+                                    if ($f === 0) {
+                                        $questionStatus[$questionID] = 0;
+                                        $correctAnswer--;
+                                        $totalCorrectMark -= $questionsBank[$questionID]->mark;
+                                    }
                                 }
                             }
                         }
-                    }
-                    
-                    if (inicompute($this->data['onlineExam'])) {
-                        if ($this->data['onlineExam']->markType == 5) {
+                        
+                        if (inicompute($this->data['onlineExam'])) {
+                            if ($this->data['onlineExam']->markType == 5) {
 
-                            $percentage = 0;
-                            if ($totalCorrectMark > 0 && $totalQuestionMark > 0) {
-                                $percentage = (($totalCorrectMark / $totalQuestionMark) * 100);
+                                $percentage = 0;
+                                if ($totalCorrectMark > 0 && $totalQuestionMark > 0) {
+                                    $percentage = (($totalCorrectMark / $totalQuestionMark) * 100);
+                                }
+
+                                $statusID = $percentage >= $this->data['onlineExam']->percentage ? 5 : 10;
+                            } elseif ($this->data['onlineExam']->markType == 10) {
+                                $statusID = $totalCorrectMark >= $this->data['onlineExam']->percentage ? 5 : 10;
                             }
-
-                            $statusID = $percentage >= $this->data['onlineExam']->percentage ? 5 : 10;
-                        } elseif ($this->data['onlineExam']->markType == 10) {
-                            $statusID = $totalCorrectMark >= $this->data['onlineExam']->percentage ? 5 : 10;
                         }
-                    }
 
-                    $this->online_exam_user_status_m->insert([
-                        'onlineExamID'       => $this->data['onlineExam']->onlineExamID,
-                        'time'               => $time,
-                        'totalQuestion'      => inicompute($onlineExamQuestions),
-                        'totalAnswer'        => $totalAnswer,
-                        'nagetiveMark'       => $this->data['onlineExam']->negativeMark,
-                        'duration'           => $this->data['onlineExam']->duration,
-                        'score'              => $correctAnswer,
-                        'userID'             => $userID,
-                        'classesID'          => inicompute($this->data['class']) ? $this->data['class']->classesID : 0,
-                        'sectionID'          => inicompute($this->data['section']) ? $this->data['section']->sectionID : 0,
-                        'examtimeID'         => $examTimeCounter,
-                        'totalCurrectAnswer' => $correctAnswer,
-                        'totalMark'          => $totalQuestionMark,
-                        'totalObtainedMark'  => $totalCorrectMark,
-                        'totalPercentage'    => (($totalCorrectMark > 0 && $totalQuestionMark > 0) ? (($totalCorrectMark / $totalQuestionMark) * 100) : 0),
-                        'statusID'           => $statusID,
-                        'relasi_jabatan'       => $relasi,
-                    ]);
-
-                    if ($this->data['onlineExam']->paid) {
-                        $onlineExamPayments = $this->online_exam_payment_m->get_single_online_exam_payment_only_first_row([
-                            'online_examID' => $this->data['onlineExam']->onlineExamID,
-                            'status'        => 0,
-                            'usertypeID'    => $this->session->userdata('usertypeID'),
-                            'userID'        => $this->session->userdata('loginuserID')
+                        $this->online_exam_user_status_m->insert([
+                            'onlineExamID'       => $this->data['onlineExam']->onlineExamID,
+                            'time'               => $time,
+                            'totalQuestion'      => inicompute($onlineExamQuestions),
+                            'totalAnswer'        => $totalAnswer,
+                            'nagetiveMark'       => $this->data['onlineExam']->negativeMark,
+                            'duration'           => $this->data['onlineExam']->duration,
+                            'score'              => $correctAnswer,
+                            'userID'             => $userID,
+                            'classesID'          => inicompute($this->data['class']) ? $this->data['class']->classesID : 0,
+                            'sectionID'          => inicompute($this->data['section']) ? $this->data['section']->sectionID : 0,
+                            'examtimeID'         => $examTimeCounter,
+                            'totalCurrectAnswer' => $correctAnswer,
+                            'totalMark'          => $totalQuestionMark,
+                            'totalObtainedMark'  => $totalCorrectMark,
+                            'totalPercentage'    => (($totalCorrectMark > 0 && $totalQuestionMark > 0) ? (($totalCorrectMark / $totalQuestionMark) * 100) : 0),
+                            'statusID'           => $statusID,
+                            'relasi_jabatan'       => $relasi,
                         ]);
 
-                        if ($onlineExamPayments->online_exam_paymentID != NULL) {
-                            $onlineExamPaymentArray = [
-                                'status' => 1
-                            ];
-                            $this->online_exam_payment_m->update_online_exam_payment($onlineExamPaymentArray, $onlineExamPayments->online_exam_paymentID);
-                        }
-                    }
+                        if ($this->data['onlineExam']->paid) {
+                            $onlineExamPayments = $this->online_exam_payment_m->get_single_online_exam_payment_only_first_row([
+                                'online_examID' => $this->data['onlineExam']->onlineExamID,
+                                'status'        => 0,
+                                'usertypeID'    => $this->session->userdata('usertypeID'),
+                                'userID'        => $this->session->userdata('loginuserID')
+                            ]);
 
-                    $allUserExams = $this->online_exam_user_status_m->get_online_exam_user_status();
-                    $givenTimes = [];
-                    $allExams = pluck($this->online_exam_m->get_online_exam(), 'showMarkAfterExam', 'onlineExamID');
-                    foreach ($allUserExams as $allUserExam) {
-                        if (!array_key_exists($allUserExam->onlineExamID, $givenTimes)) {
-                            $givenTimes[$allUserExam->onlineExamID] = $allExams[$allUserExam->onlineExamID];
+                            if ($onlineExamPayments->online_exam_paymentID != NULL) {
+                                $onlineExamPaymentArray = [
+                                    'status' => 1
+                                ];
+                                $this->online_exam_payment_m->update_online_exam_payment($onlineExamPaymentArray, $onlineExamPayments->online_exam_paymentID);
+                            }
                         }
+
+                        $allUserExams = $this->online_exam_user_status_m->get_online_exam_user_status();
+                        $givenTimes = [];
+                        $allExams = pluck($this->online_exam_m->get_online_exam(), 'showMarkAfterExam', 'onlineExamID');
+                        foreach ($allUserExams as $allUserExam) {
+                            if (!array_key_exists($allUserExam->onlineExamID, $givenTimes)) {
+                                $givenTimes[$allUserExam->onlineExamID] = $allExams[$allUserExam->onlineExamID];
+                            }
+                        }
+
+                        $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID, $user_options, $user_answer);
+                        $this->question_level_report_m->insert_batch_question_level_report($resultAnswer);
+                        $this->data['showResult']        = $givenTimes;
+                        $this->data['fail']              = $f;
+                        $this->data['questionStatus']    = $questionStatus;
+                        $this->data['totalAnswer']       = $totalAnswer;
+                        $this->data['correctAnswer']     = $correctAnswer;
+                        $this->data['totalCorrectMark']  = $totalCorrectMark;
+                        $this->data['totalQuestionMark'] = $totalQuestionMark;
+                        $this->data['userExamCheck']     = $userExamCheck;
+                        $this->data['onlineExamID']      = $onlineExamID;
+                        $this->data["subview"]           = "online_exam/take_exam/result";
+
+                        if ($this->db->trans_status() === FALSE) {
+                            $this->db->trans_rollback();
+                            $this->data["subview"] = "error";
+                            return $this->load->view('_layout_main', $this->data);
+                        }else{
+                            $this->db->trans_commit();
+                        }
+                        return $this->load->view('_layout_main', $this->data);
+
+                    } catch (Exception $e) {
+                        // Catch any exceptions and rollback the transaction
+                        $this->db->trans_rollback();
+                        log_message('error', $e->getMessage()); // Log the error message for debugging
+                        $this->data["subview"] = "error";
+                        return $this->load->view('_layout_main', $this->data);
                     }
-                    $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID);
-                    $this->question_level_report_m->insert_batch_question_level_report($resultAnswer);
-                    $this->data['showResult']        = $givenTimes;
-                    $this->data['fail']              = $f;
-                    $this->data['questionStatus']    = $questionStatus;
-                    $this->data['totalAnswer']       = $totalAnswer;
-                    $this->data['correctAnswer']     = $correctAnswer;
-                    $this->data['totalCorrectMark']  = $totalCorrectMark;
-                    $this->data['totalQuestionMark'] = $totalQuestionMark;
-                    $this->data['userExamCheck']     = $userExamCheck;
-                    $this->data['onlineExamID']      = $onlineExamID;
-                    $this->data["subview"]           = "online_exam/take_exam/result";
-                    return $this->load->view('_layout_main', $this->data);
                 }
+
+                /** */
+
                 if ($examGivenStatus || $userExamCheck[$onlineExamID]->relasi_jabatan != $relasi) {
                     $this->data["subview"] = "online_exam/take_exam/question";
                     return $this->load->view('_layout_main', $this->data);
@@ -623,8 +721,7 @@ class Take_exam extends Admin_Controller
                     $this->data['online_exam']       = $online_exam;
                     $this->data["subview"]           = "online_exam/take_exam/expireandupcoming";
                     return $this->load->view('_layout_main', $this->data);
-                } 
-                else {
+                } else {
                     $this->data['examsubjectstatus'] = $examSubjectStatus;
                     $this->data['expirestatus']      = $examExpireStatus;
                     $this->data['upcomingstatus']    = TRUE;

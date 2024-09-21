@@ -61,20 +61,7 @@
                 //         }
                 //     ]
                 // });
-                var parentTable = $('#example1').DataTable();
-                $('#example1 tbody').on('click', '.showDetails', function() {
-                    console.log("aksdhsajkd");
-                    var tr = $(this).closest('tr');
-                    var row = parentTable.row(tr);
-
-                    if (row.child.isShown()) {
-                        // This row is already open - close it
-                        row.child.hide();
-                        tr.removeClass('shown');
-                    } else {
-                        tr.addClass('shown');
-                    }
-                });
+                
             });
         </script>
 

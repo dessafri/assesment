@@ -36,6 +36,15 @@ class Online_exam_user_answer_m extends MY_Model {
         return $id;
     }
 
+    public function insert_batch($array) 
+    {
+        if (!empty($array)) {
+            $this->db->insert_batch('online_exam_user_answer', $array); // Replace 'your_table_name' with the actual table name
+        }
+        return true;
+    }
+
+
     public function update_online_exam_user_answer($data, $id = NULL) 
     {
         parent::update($data, $id);
