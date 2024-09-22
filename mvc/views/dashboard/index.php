@@ -149,6 +149,7 @@
                         <?=$generateBoxValue['count']?>
                     </h3 class="text-white">
                     <p class="text-white">
+                    &nbsp;
                         <?=$this->lang->line('menu_'.$generateBoxValue['menu'])?>
                     </p>
                 </div>
