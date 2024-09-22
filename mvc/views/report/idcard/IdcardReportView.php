@@ -9,30 +9,30 @@
     <!-- form start -->
     <div class="box-body">
         <div class="row">
-
             <div class="col-sm-12">
-            <!-- <button class="button btn btn-primary"><a class="text-white" href="<?=base_url('idcardreport/getReport')?>">Print</a></button> -->
             <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr>
                         <th width="2%">No</th>
-                        <th width="50%">Nama</th>
-                        <th width="20%">Total Dijawab</th>
-                        <th width="20%">Total Score</th>
+                        <th width="40%">Nama</th>
+                        <th width="15%">Total Dijawab</th>
+                        <th width="15%">Total Score</th>
+                        <th width="15%">Actual Score</th>
                         <th class="hidden"></th>
                         <th >Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php
-                    $i = 1; foreach($results as $key => $result) {
+                    $i = 1; foreach($reports as $key => $report) {
                     ?>
                         <tr>
-                            <td data-title="id"><?php echo $i; ?></td>
-                            <td data-title="namaKaryawan"><?=$result['name']?></td>
-                            <td><?= $result['total'] ?></td>
-                            <td><?= $result['score'] ?></td>
                             <td class="hidden"><?=$key?></td>
+                            <td data-title="id"><?php echo $i; ?></td>
+                            <td data-title="namaKaryawan"><?=$report['nama']?></td>
+                            <td><?= $report['total_dijawab'] ?></td>
+                            <td><?= $report['total_score'] ?></td>
+                            <td><?= $report['actual_score'] ?></td>
                             <td>
                                 <button class="btn btn-primary showDetails"><i class="fa fa-eye"></i></button>
                             </td>
@@ -56,16 +56,10 @@
 
 <script>
     $(document).ready(function () {
-        var results = <?php echo json_encode($results)?>;
+        var reports = <?php echo json_encode($reports)?>;
         var parentTable = $('#example1').DataTable({
             dom: 'Bfrtip',
             buttons: [
-                {
-                    extend: 'copyHtml5',
-                    exportOptions: {
-                        columns: ':visible'
-                    }
-                },
                 {
                     extend: 'excelHtml5',
                     exportOptions: {
@@ -97,73 +91,97 @@
             var tr = $(this).closest('tr');
             var row = parentTable.row(tr);
             var dt = row.data();
-            // console.log(dt)
 
             if (row.child.isShown()) {
                 row.child.hide();
                 tr.removeClass('shown');
             } else {
-                row.child(formatDetails(dt[4])).show();
+                row.child(formatDetails(dt[0])).show();
                 tr.addClass('shown');
             }
         });
 
         // Function to format the details to be displayed in the child row
         function formatDetails(idx) {
-            var sub = results[idx]['detail'];
-            var template = ``
+            var sub = reports[idx]['sub_kriteria'];
+            var template = `<div class='box'>`
+            // console.log(sub)
             $.map(sub, function(val, i){
-                var nm = i.replaceAll(" ","_");
-
                 // Build the outer table with header
                 template += `
-                <table class='table'>
-                    <tr>
-                        <td class='col-sm-6' colspan=4>
-                            <h4 class='font-weight-bold'>${i}</h4>
-                        </td>
-                        <td class='col-sm-6 text-right'>
-                            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#multiCollapse${idx}-${nm}" aria-expanded="false" aria-controls="multiCollapse${idx}-${nm}">Detail <i class='fa fa-arrow-down'></i></button>
-                        </td>
-                    </tr>
-                </table>
+                <div class='box-header'>
+                    <p class='box-title' style='font-weight:bold'>${val.nama_kriteria}</p>
+                </div>
+                <div class='box-body'>
+                    <table class="table table-bordered table-hover" style='margin-top:20px' id='table_${idx}-${val.level_report_id}'>
+                        <tr>
+                            <th rowspan='2'>Uraian</th>
+                            <th rowspan='2'>Poin</th>
+                            <th rowspan='2'>Jumlah</th>
+                            <th rowspan='2'>Nilai</th>
+                            <th rowspan='2'>Total</th>
+                            <th rowspan='2'>Bukti</th>
+                            <th colspan='3' class='text-center'>Verifikasi</th>
+                            <th rowspan='2'>Catatan</th>
+                        </tr>
+                        <tr>
+                            <th width='10%'>Jumlah</th>
+                            <th>Nilai</th>
+                            <th>Total</th>
+                        </tr>
                 `;
                 
-                // Create a collapsible section for each row of details
-                template += `
-                    <table class="table table-bordered collapse multi-collapse" id="multiCollapse${idx}-${nm}">
-                        <tbody>
-                `;
-
-                // Loop through the details in 'val' and generate table rows for each detail
-                $.map(val, function(detailVal, detailKey) {
+                $.map(val.sub_tahap, function(detailVal, detailKey) {
                     template += `
                         <tr>
-                            <td>${detailVal.question}</td>
-                            <td>${detailVal.value}</td>
-                            <td>
-                                <input class='form-control' type="number" min='0' name="inputValue" value="" id="input_${detailVal.questionLevelReportID}" data-id="${detailVal.questionLevelReportID}" data-option='${detailVal.onlineExamUserAnswerOptionID}' data-answer='${detailVal.onlineExamUserAnswerID}'>
-                            </td>
-                            <td>
-                                <a class='${detailVal.fileAnswer ? '' : 'disabled'}' href="${detailVal.fileAnswer ? detailVal.fileAnswer : '#' }"><i class='fa fa-file'></i> ${detailVal.fileAnswer ? 'File' : 'No File'}</a>
-                            </td>
-                            <td class='col-sm-1'>
-                            </td>
+                            <th colspan='10' class='h5 bg-orange-dark' style="font-weight:bold;">${detailVal.nama_tahap}</th>
                         </tr>
-                    `;
+                        `
+
+                    $.map(detailVal.detail_soal, function(soal, soalKey) {
+                        template += `
+                            <tr>
+                                <td>${soal.question}</td>
+                                <td>${soal.mark}</td>
+                                <td>${soal.value}</td>
+                                <td>${soal.score}</td>
+                                <td>${soal.total}</td>
+                                <td>
+                                    <a target='_blank' class='${soal.file ? '' : 'disabled'}' href="${soal.file ? soal.file : '#' }"><i class='fa fa-file'></i> ${soal.file ? 'File' : 'No File'}</a>
+                                </td>
+                                `;
+                        if(soal.is_verif == 1){
+                            template += `
+                                <td>${soal.actual_value}</td>
+                                <td>${soal.actual_score}</td>
+                                <td>${soal.total_actual_score}</td>
+                                <td>${soal.catatan}</td>
+                            `;
+                        }else{
+                            template += `
+                                <td>
+                                    <input class='form-control' type="number" min='0' name="input_${soal.onlineExamUserAnswerOptionID}" value="" data-q='${soal.questionBankID}' id="input_${soal.onlineExamUserAnswerOptionID}" data-id="${soal.onlineExamUserAnswerOptionID}">
+                                </td>
+                                <td>${soal.actual_score ? soal.actual_score : 0}</td>
+                                <td>${soal.total_actual_score ? soal.total_actual_score : 0}</td>
+                                <td>
+                                    <textarea class='form-control' name="catatan_${soal.onlineExamUserAnswerOptionID}" id="catatan_${soal.onlineExamUserAnswerOptionID}" data-id='${soal.onlineExamUserAnswerOptionID}'></textarea>
+                                </td>
+                            `;
+                        }
+                        template +=`</tr><tr><td colspan='10'></td></tr>`;
+                    });
                 });
+                template += `
+                    
+                </table>`
 
                 template += `
-                        <tr>
-                            <td colspan='4'></td>
-                            <td>
-                                <button class="btn btn-success" data-index='${idx}-${nm}'>Verifikasi</button>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                `;
-
+                <div class='row'>
+                    <div class='col text-right'>
+                        <button class="btn btn-success" style='margin-right:15px;margin-top:20px' data-status='${val.status_id}' data-group='${val.group_id}' data-index='${idx}-${val.level_report_id}'>Verifikasi</button>
+                    </div>
+                </div>`;
             });
 
             return template;
@@ -171,32 +189,48 @@
 
         $(document).on('click', '.btn-success', function() {
             var idx = $(this).data('index');  // Or whatever index you need
-            verifikasi(idx);
+            var groupid = $(this).data('group');
+            var statusid = $(this).data('status');
+            verifikasi(idx, groupid, statusid);
         });
 
-        function verifikasi(idx) {
-            var inputs = $(`#multiCollapse${idx} input[data-id]`);  // Select all inputs in the collapsed section
+        function verifikasi(idx, groupid, statusid) {
+            var inputs = $(`#table_${idx} input[data-id`);  // Select all inputs in the collapsed section
+            var texts = $(`#table_${idx} textarea[data-id`);  // Select all inputs in the collapsed section
             var dataToSend = [];
 
-            // Loop through inputs and collect values and IDs
+            var jumlah = [];
+            var ids = []
+            var qids = []
             inputs.each(function() {
-                var questionID = $(this).data('id');
-                var optionID = $(this).data('option');
-                var answerID = $(this).data('answer');
-                var value = $(this).val();
-                // console.log(optionID)
+                var id = $(this).data('id');
+                ids.push(id)
+                var qid = $(this).data('q');
+                qids.push(qid)
 
+                jumlah.push($(this).val() ? parseInt($(this).val()) : 0);
+            });
+
+            var catatan = []
+            texts.each(function() {
+                var id = $(this).data('id');
+                catatan.push($(this).val());
+            });
+            $.each(ids, function(idx, val){
                 dataToSend.push({
-                    questionLevelReportID: questionID,
-                    answer: value,
-                    optionID : optionID,
-                    answerID:answerID,
+                    'questionID':qids[idx],
+                    'statusID': statusid,
+                    'groupid':groupid,
+                    'optionID' : val,
+                    'jumlah' : jumlah[idx],
+                    'catatan':catatan[idx]
                 });
             });
+            // console.log(dataToSend)
 
             $.ajax({
                 type: 'POST',
-                url: "<?=base_url('idcardreport/update_insert_question')?>",
+                url: "<?=base_url('idcardreport/update_nilai')?>",
                 data: {
                     data: dataToSend
                 },

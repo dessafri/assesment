@@ -20,8 +20,6 @@ class Online_exam_m extends MY_Model {
 
     public function get_single_online_exam($array) 
     {
-        $this->db->order_by('onlineExamID', 'DESC');
-        $this->db->limit(1);
         $query = parent::get_single($array);
         return $query;
     }

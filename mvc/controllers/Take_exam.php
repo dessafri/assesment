@@ -21,6 +21,7 @@ class Take_exam extends Admin_Controller
     public $db;
     public $question_bank_m;
     public $question_option_m;
+    public $question_group_m;
     public $question_level_report_m;
     public $relasi_jabatan_m;
     public $question_answer_m;
@@ -58,6 +59,7 @@ class Take_exam extends Admin_Controller
         $this->load->model('instruction_m');
         $this->load->model('question_bank_m');
         $this->load->model('question_option_m');
+        $this->load->model('question_group_m');
         $this->load->model('question_level_report_m');
         $this->load->model('relasi_jabatan_m');
         $this->load->model('question_answer_m');
@@ -389,18 +391,18 @@ class Take_exam extends Admin_Controller
                     try {
                         $time               = date("Y-m-d h:i:s");
                         $mainQuestionAnswer = [];
-                        $typeNumber         = null;
                         $userAnswer         = $this->input->post('answer');
                         $fileAnswer         = [];
                         if(!empty($_FILES)){
                             $fileAnswer = $_FILES['file'];
                         }
-                        // dd($userAnswer);
 
                         $questionStatus    = [];
                         $correctAnswer     = 0;
                         $totalQuestionMark = 0;
                         $totalCorrectMark  = 0;
+                        $totalNilaiMark    = 0;
+                        $totalNilaiBobot   = 0;
                         $visited           = [];
                         foreach ($allAnswers as $answer) {
                             if ($answer->typeNumber == 3) {
@@ -426,8 +428,6 @@ class Take_exam extends Admin_Controller
                             foreach ($allOnlineExamQuestions as $aoeq) {
                                 if (isset($questionsBank[$aoeq->questionID])) {
                                     if($questionsBank[$aoeq->questionID]->typeNumber == 4){
-                                        $totalQuestionMark -= $questionsBank[$aoeq->questionID]->mark;
-                                    } else if($questionsBank[$aoeq->questionID]->typeNumber == 5){
                                         $totalQuestionMark -= $questionsBank[$aoeq->questionID]->mark;
                                     }
                                     $totalQuestionMark += $questionsBank[$aoeq->questionID]->mark;
@@ -589,7 +589,13 @@ class Take_exam extends Admin_Controller
                                             // save jawaban
                                             $takeAnswer = strtolower((string) $answer);
                                             $getAnswer  = isset($userAnswer[$typeID][$questionID]) ? strtolower((string) $userAnswer[$typeID][$questionID]) : '';
-                                            $insert_online_exam_user_answer_option_m = $this->online_exam_user_answer_option_m->insert([
+                                            $score = floatval($getAnswer) * $questionsBank[$questionID]->mark;
+
+                                            $question_group = $this->question_group_m->get_single_question_group(['questionGroupID'=>$questionsBank[$questionID]->groupID]);
+                                            $total_score = $score * ($question_group->bobot/100);
+                                            $totalNilaiMark += $score;
+                                            $totalNilaiBobot += $total_score;
+                                            $this->online_exam_user_answer_option_m->insert([
                                                 'questionID'           => $questionID,
                                                 'typeID'               => $typeID,
                                                 'text'                 => $getAnswer,
@@ -598,7 +604,9 @@ class Take_exam extends Admin_Controller
                                                 'examtimeID'           => $examTimeCounter,
                                                 'userID'               => $userID,
                                                 'relasi_jabatan'       => $relasi,
-                                                'fileAnswer'           => $new_file != '' ? $path.$new_file : null
+                                                'fileAnswer'           => $new_file != '' ? $path.$new_file : null,
+                                                'score'                => $score,
+                                                'total_score'          => $total_score,
                                             ]);
                                             $user_options[] = $this->db->insert_id();
                                         }
@@ -634,18 +642,19 @@ class Take_exam extends Admin_Controller
                             'totalAnswer'        => $totalAnswer,
                             'nagetiveMark'       => $this->data['onlineExam']->negativeMark,
                             'duration'           => $this->data['onlineExam']->duration,
-                            'score'              => $correctAnswer,
+                            'score'              => $this->data['onlineExam']->examTypeNumber == 5 ? $totalNilaiBobot : $correctAnswer,
                             'userID'             => $userID,
                             'classesID'          => inicompute($this->data['class']) ? $this->data['class']->classesID : 0,
                             'sectionID'          => inicompute($this->data['section']) ? $this->data['section']->sectionID : 0,
                             'examtimeID'         => $examTimeCounter,
                             'totalCurrectAnswer' => $correctAnswer,
                             'totalMark'          => $totalQuestionMark,
-                            'totalObtainedMark'  => $totalCorrectMark,
+                            'totalObtainedMark'  => $this->data['onlineExam']->examTypeNumber == 5 ? $totalNilaiMark : $totalCorrectMark,
                             'totalPercentage'    => (($totalCorrectMark > 0 && $totalQuestionMark > 0) ? (($totalCorrectMark / $totalQuestionMark) * 100) : 0),
                             'statusID'           => $statusID,
-                            'relasi_jabatan'       => $relasi,
+                            'relasi_jabatan'     => $relasi,
                         ]);
+                        $status_id = $this->db->insert_id();
 
                         if ($this->data['onlineExam']->paid) {
                             $onlineExamPayments = $this->online_exam_payment_m->get_single_online_exam_payment_only_first_row([
@@ -672,9 +681,22 @@ class Take_exam extends Admin_Controller
                             }
                         }
 
-                        $ref = uniqid();
-                        $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID, $user_options, $user_answer, $ref);
-                        $this->question_level_report_m->insert_batch_question_level_report($resultAnswer);
+                        // insert into report
+                        // $ref = uniqid();
+                        // $resultAnswer = $this->question_level_report_m->compute_jawaban($userID,$relasi,$this->data['onlineExam']->onlineExamID, $user_options, $user_answer, $ref);
+                        $user_answer = implode(',', $user_answer);
+                        $user_options = implode(',', $user_options);
+                        $question_ids = implode(',',array_keys($questionsBank));
+                        $report = [
+                            'userID' => $userID,
+                            'examID' => $this->data['onlineExam']->onlineExamID,
+                            'questionID' => $question_ids,
+                            'onlineExamUserAnswerID' => $user_answer,
+                            'onlineExamUserAnswerOptionID' => $user_options,
+                            'onlineExamUserStatus' => $status_id,
+                        ];
+                        $this->question_level_report_m->insert($report);
+
                         $this->data['showResult']        = $givenTimes;
                         $this->data['fail']              = $f;
                         $this->data['questionStatus']    = $questionStatus;

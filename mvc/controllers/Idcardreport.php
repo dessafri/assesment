@@ -16,11 +16,15 @@ class Idcardreport extends Admin_Controller
     public $section_m;
     public $student_m;
     public $systemadmin_m;
+    public $online_exam_m;
+    public $question_bank_m;
     public $question_level_m;
+    public $question_group_m;
     public $question_level_report_m;
     public $online_exam_question_m;
     public $online_exam_user_answer_m;
     public $online_exam_user_answer_option_m;
+    public $online_exam_user_status_m;
     public $teacher_m;
     public $user_m;
     public $data;
@@ -49,9 +53,13 @@ class Idcardreport extends Admin_Controller
         $this->load->model('student_m');
         $this->load->model('teacher_m');
         $this->load->model('schoolyear_m');
+        $this->load->model('online_exam_m');
         $this->load->model('online_exam_question_m');
         $this->load->model('online_exam_user_answer_m');
         $this->load->model('online_exam_user_answer_option_m');
+        $this->load->model('online_exam_user_status_m');
+        $this->load->model('question_bank_m');
+        $this->load->model('question_group_m');
         $this->load->model('question_level_m');
         $this->load->model('question_level_report_m');
         $language = $this->session->userdata('lang');
@@ -307,28 +315,121 @@ class Idcardreport extends Admin_Controller
             ),
         );
         $this->data['usertypes'] = $this->usertype_m->get_usertype();
-        $users = $this->student_m->get_student();
-        $datareport = $this->question_level_report_m->report_subtype();
-        $dataReportType = $this->question_level_report_m->report_type();
-        $dataEndReport = $this->question_level_report_m->end_report();
-        $dataTotalReport = $this->question_level_report_m->total_report();
-        $dataEndReportLimit2 = $this->question_level_report_m->report_type_limit2();
-        $types = $this->question_level_m->get_question_level();
-
-        $results = $this->question_level_report_m->get_parent();
-        foreach ($results as $key => &$parent) {
-            $childs = $this->question_level_report_m->get_child($parent['userID'], $parent['examID'], $parent['ids']);
-            $score = 0;
-            foreach ($childs as $key => $child) {
-                $parent['detail'][$child['title']][] = $child;
-                $score += $child['mark'];
-            }
-            $parent['score'] = $score;
+        $groups = $this->question_group_m->get_question_group();
+        $new_groups = [];
+        foreach ($groups as $key => $g) {
+            $new_groups[$g->questionGroupID] = $g->title;
         }
+        $types = $this->question_level_m->get_question_level();
+        $new_types = [];
+        foreach ($types as $key => $t) {
+            $new_types[$t->questionLevelID] = $t->name;
+        }
+        
+        $results = $this->question_level_report_m->get_question_level_report();
+
+        $reports = [];
+        foreach ($results as $key => &$result) {
+            $questionBankID = explode(',',$result->questionID);
+            $examUserAnswerID = explode(',',$result->onlineExamUserAnswerID);
+            $examUserAnswerOptionID = explode(',',$result->onlineExamUserAnswerOptionID);
+
+            $result->user = $this->student_m->get_single_student(['studentID'=>$result->userID]);
+            $result->exam = $this->online_exam_m->get_single_online_exam(['onlineExamID'=>$result->examID]);
+            $result->question = $this->question_bank_m->get_question_bank_wherein($questionBankID,'questionBankID');
+            $result->user_answer = $this->online_exam_user_answer_m->get_online_exam_user_answer_wherein($examUserAnswerID,'onlineExamUserAnswerID');
+            $result->user_answer_option = $this->online_exam_user_answer_option_m->get_online_exam_user_answer_option_wherein($examUserAnswerOptionID,'onlineExamUserAnswerOptionID');
+            $result->user_status = $this->online_exam_user_status_m->get_single_online_exam_user_status(['onlineExamUserStatus'=>$result->onlineExamUserStatus]);
+
+            $groupIDs = array_map(function($item) {
+                return $item->groupID;
+            }, $result->question);
+            $groupIDs = array_unique($groupIDs);
+
+            $levelIDs = array_map(function($item) {
+                return $item->levelID;
+            }, $result->question);
+            $levelIDs = array_unique($levelIDs);
+
+            $reports[$key] = [
+                'nama' => $result->user->name,
+                'total_dijawab' => $result->user_status->totalAnswer,
+                'total_score' => $result->user_status->score,
+                'actual_score' => $result->user_status->score_verifikasi
+            ];
+            foreach ($groupIDs as $ky => $g) {
+                $reports[$key]['sub_kriteria'][$ky] = [
+                    'level_report_id'=>$result->questionLevelReportID,
+                    'group_id' =>$g,
+                    'nama_kriteria' => $new_groups[$g],
+                    'status_id' => $result->user_status->onlineExamUserStatus
+                ];
+                foreach ($levelIDs as $k => $l) {
+                    $reports[$key]['sub_kriteria'][$ky]['sub_tahap'][$k] = [
+                        'tahap_id'=>$l,
+                        'nama_tahap' => $new_types[$l],
+                        'detail_soal' => []
+                    ];
+                }
+            }
+
+            foreach ($result->question as $new_question) {
+                $group_id_to_match = $new_question->groupID;
+                $tahap_id_to_match = $new_question->levelID;
+            
+                foreach ($reports[$key]['sub_kriteria'] as &$sub_kriteria) {
+                    // Check if group_id matches
+                    if ($sub_kriteria['group_id'] === $group_id_to_match) {
+                        // Loop through the sub_tahap array
+                        foreach ($sub_kriteria['sub_tahap'] as &$tahap) {
+                            // Check if tahap_id matches
+                            if ($tahap['tahap_id'] === $tahap_id_to_match) {
+                                // Insert new question into detail_soal
+                                $options = array_filter($result->user_answer_option, function($item) use ($new_question) {
+                                    return $item->questionID === $new_question->questionBankID;
+                                });
+                                $option = reset($options);
+
+                                $tahap['detail_soal'][] = [
+                                    'questionLevelReportID'=> $result->questionLevelReportID,
+                                    'questionBankID'=> $new_question->questionBankID,
+                                    'onlineExamUserAnswerOptionID'=> $option->onlineExamUserAnswerOptionID,
+                                    'question'=> $new_question->question,
+                                    'mark'=> $new_question->mark,
+                                    'value' => $option->text,
+                                    'score'=> $option->score,
+                                    'total'=> $option->total_score,
+                                    'file' => $option->fileAnswer,
+                                    'actual_value' => $option->actual_value,
+                                    'actual_score' => $option->actual_score,
+                                    'total_actual_score' => $option->total_actual_score,
+                                    'catatan' => $option->catatan,
+                                    'is_verif' => $option->is_verif
+                                ];
+                                // optionid
+                                // questionid
+                                //pertanyaan
+                                //poin
+                                //jumlah/value
+                                //nilai = jumlah * poin
+                                //total  = nilai * bobot
+                                //bukti
+                                //input admin
+                                //nilai admin
+                                //total admin
+                                // catatan
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // dd($reports);
 
         $this->data['subtype'] = $types;
         $this->data['classes'] = $this->classes_m->get_classes();
-        $this->data['results'] = $results;
+        $this->data['reports'] = $reports;
         $this->data["subview"] = "report/idcard/IdcardReportView";
         $this->load->view('_layout_main', $this->data);
     }
@@ -1354,9 +1455,10 @@ class Idcardreport extends Admin_Controller
 
     public function update_insert_question()
     {
-        $data = $this->input->post('data');
+        $data         = $this->input->post('data');
         $userID       = $this->session->userdata("loginuserID");
         $response = [];
+        dd($data);
         // Dump => array(4) {
         //     [0] => array(4) {
         //       ["questionLevelReportID"] => string(2) "14"
@@ -1443,6 +1545,57 @@ class Idcardreport extends Admin_Controller
                 ]);
             }
             
+            if ($this->db->trans_status() === FALSE) {
+                $this->db->trans_rollback();
+                $response = [
+                    'success'=>false,
+                ];
+            }else{
+                $this->db->trans_commit();
+            }
+            $response = [
+                'success'=>true,
+            ];
+
+        } catch (Exception $e) {
+            // Catch any exceptions and rollback the transaction
+            $this->db->trans_rollback();
+            log_message('error', $e->getMessage()); // Log the error message for debugging
+            $response = [
+                'success'=>false,
+                'message'=> $e->getMessage(),
+            ];
+        }
+
+        echo json_encode($response);
+        exit;
+    }
+
+    public function update_nilai(){
+        $data         = $this->input->post('data');
+        $response = [];
+
+        $this->db->trans_begin();
+        try {
+
+            $group = $this->question_group_m->get_single_question_group(['questionGroupID' => $data[0]['groupid'] ]);
+
+            $actual_score= 0;
+            foreach ($data as $key => $d) {
+                $question = $this->question_bank_m->get_single_question_bank(['questionBankID'=> $d['questionID']]);
+                $answer_option = $this->online_exam_user_answer_option_m->get_single_online_exam_user_answer_option(['onlineExamUserAnswerOptionID'=>$d['optionID']]);
+                $this->online_exam_user_answer_option_m->update_online_exam_user_answer_option([
+                    'actual_value'=>$d['jumlah'],
+                    'actual_score' => floatval($d['jumlah']) * $question->mark,
+                    'total_actual_score' => floatval($d['jumlah']) * $question->mark * $group->bobot/100,
+                    'catatan' => $d['catatan'],
+                    'is_verif'=>true
+                ], $d['optionID']);
+                $actual_score += floatval($d['jumlah']) * $question->mark;
+            }
+
+            $this->online_exam_user_status_m->update_online_exam_user_status(['score_verifikasi'=>$actual_score], $data[0]['statusID']);
+
             if ($this->db->trans_status() === FALSE) {
                 $this->db->trans_rollback();
                 $response = [

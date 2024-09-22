@@ -50,4 +50,9 @@ class Online_exam_user_answer_option_m extends MY_Model {
         $query = parent::get_where_in($array, $key);
         return $query;
     }
+
+    function get_online_exam_user_answer_option_wherein($array=NULL, $key=FALSE) {
+        $query = parent::get_where_in($array, $key);
+        return $query;
+    }
 }

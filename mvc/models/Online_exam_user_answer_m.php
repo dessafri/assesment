@@ -55,4 +55,9 @@ class Online_exam_user_answer_m extends MY_Model {
     {
         parent::delete($id);
     }
+
+    public function get_online_exam_user_answer_wherein($array=NULL, $key=FALSE) {
+        $query = parent::get_where_in($array, $key);
+        return $query;
+    }
 }

@@ -47,8 +47,22 @@ class Question_bank_m extends MY_Model {
         parent::delete($id);
     }
 
+    public function get_question_bank_wherein($array=NULL, $key=FALSE) {
+        $query = parent::get_where_in($array, $key);
+        return $query;
+    }
+
     public function get_question_bank_questionArray($array=NULL, $key=FALSE) {
         $query = parent::get_where_in($array, $key);
+        return $query;
+    }
+
+    public function get_question_bank_group_by($array=NULL, $key=FALSE, $group=FALSE) {
+        $this->db->where_in($key, $array);
+        $this->db->group_by($group);
+        $query = $this->db->get($this->_table_name);
+        $query = $query->result();
+
         return $query;
     }
 }

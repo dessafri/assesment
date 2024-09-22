@@ -15,6 +15,18 @@ class Question_level_report_m extends MY_Model
         parent::__construct();
     }
 
+    public function get_question_level_report($array=NULL, $signal=FALSE) 
+    {
+        $query = parent::get($array, $signal);
+        return $query;
+    }
+
+    public function get_order_by_question_level_report($array=NULL) 
+    {
+        $query = parent::get_order_by($array);
+        return $query;
+    }
+
     public function insert_question_level_report($array)
     {
         $error = parent::insert($array);
@@ -200,7 +212,7 @@ class Question_level_report_m extends MY_Model
             left join student s on s.studentID =q.userID 
             left join teacher t on t.teacherID =q.userID 
             left join systemadmin sy on sy.systemadminID =q.userID 
-            group by q.userID ,q.ref ";
+            group by q.userID ,q.ref order by q.questionLevelReportID desc";
 
         $result = $this->db->query($query);
         return $result->result_array();     
