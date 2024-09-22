@@ -602,13 +602,18 @@ function btn_upload($uri, $name)
     return anchor($uri, "<i class='fa fa-upload'></i>", "class='btn bg-maroon-light btn-xs mrg' data-placement='top' data-toggle='tooltip' data-original-title='" . $name . "'");
 }
 
-function display_menu($nodes, &$menu)
+function display_menu($nodes, &$menu, $userType)
 {
     $subUrl = ['/add', '/edit', '/view', '/index'];
 
     $CI = &get_instance();
 
     foreach ($nodes as $key => $node) {
+
+         
+        if($userType == 'Student' && $node['link'] == 'question_group' || $userType == 'Student' && $node['link'] == 'question_level' || $userType == 'Student' && $node['link'] == 'question_bank' || $userType == 'Student' && $node['link'] == 'online_exam' || $userType == 'Student' && $node['link'] == 'student'){
+        continue;
+        }
 
         $leftIcon = '<i class="fa fa-angle-left pull-right"></i>';
 
@@ -643,7 +648,7 @@ function display_menu($nodes, &$menu)
             $menu .= anchor($node['link'], '<i class="fa ' . ($node['icon'] != NULL ? $node['icon'] : 'fa-home') . '"></i><span>' . ($CI->lang->line('menu_' . $node['menuName']) != NULL ? $CI->lang->line('menu_' . $node['menuName']) : $node['menuName']) . '</span> ' . ($f ? $leftIcon : ''));
             if ($f) {
                 $menu .= '<ul class="treeview-menu">';
-                display_menu($node['child'], $menu);
+                display_menu($node['child'], $menu, $userType);
                 $menu .= "</ul>";
             }
             $menu .= "</li>";

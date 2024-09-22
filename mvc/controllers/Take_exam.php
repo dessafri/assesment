@@ -215,6 +215,7 @@ class Take_exam extends Admin_Controller
         $examExpireStatus    = FALSE;
         $examSubjectStatus   = FALSE;
 
+
         if ((int)$onlineExamID !== 0) {
 
             $this->data['student'] = $this->student_m->get_student($userID);
@@ -331,9 +332,8 @@ class Take_exam extends Admin_Controller
                 // Initialize the new array to hold the results (as an array of objects)
                 $newArray = [];
 
-                // Loop through each result
+
                 foreach ($result as $res) {
-                    // Initialize a new stdClass object with result data
                     $entry = new stdClass();
                     $entry->idresult = $res->questionLevelID;
                     $entry->nameresult = $res->name;
@@ -718,7 +718,8 @@ class Take_exam extends Admin_Controller
                         return $this->load->view('_layout_main', $this->data);
 
                     } catch (Exception $e) {
-                        // Catch any exceptions and rollback the transaction
+                        var_dump($e->getMessage());
+                        exit;
                         $this->db->trans_rollback();
                         log_message('error', $e->getMessage()); // Log the error message for debugging
                         $this->data["subview"] = "error";
@@ -753,6 +754,7 @@ class Take_exam extends Admin_Controller
                     return $this->load->view('_layout_main', $this->data);
                 }
             } else {
+                var_dump("Error gaes");
                 $this->data["subview"] = "error";
                 $this->load->view('_layout_main', $this->data);
             }

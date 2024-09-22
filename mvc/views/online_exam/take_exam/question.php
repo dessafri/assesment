@@ -11,7 +11,7 @@
 </div>
 
 <div class="row">
-    <div class="col-sm-10 fu-example section">
+    <div class="col-sm-8 fu-example section">
         <div class="box outheBoxShadow wizard" data-initialize="wizard" id="questionWizard">
             <!-- <div class="box-header bg-white">
                 <div class="checkbox hints">
@@ -42,9 +42,7 @@
                             ?>
                             <div class="clearfix step-pane sample-pane <?= $key == 0 ? 'active' : '' ?>" data-questionID="<?= $entry->idresult ?>" data-step="<?= $key + 1 ?>">
                                 <div class="question-body">
-                                    <label class="lb-title">Kelompok Pertanyaan
-                                        <?= $key + 1 ?> dari
-                                        <?= count($newArray) ?>
+                                    <label class="lb-title"><?= $onlineExam->name ?>
                                     </label>
                                     <label class="lb-content" style="font-weight: bold; font-size: 1.5em;"><?= $entry->nameresult ?></label>
                                 </div>
@@ -182,9 +180,9 @@
                             <?= $this->lang->line('take_exam_next') ?> <i class="fa fa-angle-right"></i>
                         </button>
 
-                        <button class="btn oe-btn-notvisited" type="button" name="" id="clearbutton">
+                        <!-- <button class="btn oe-btn-notvisited" type="button" name="" id="clearbutton">
                             <?= $this->lang->line('take_exam_clear_answer') ?>
-                        </button>
+                        </button> -->
 
                         <button class="btn oe-btn-notanswered" type="button" name="" id="finishedbutton"
                             onclick="finished()">
@@ -197,7 +195,7 @@
         </div>
     </div>
 
-    <div class="col-sm-2">
+    <div class="col-sm-4">
         <div class="row">
             <div class="col-sm-12 counterDiv" style="display: none;">
                 <div class="box outheBoxShadow">
@@ -233,22 +231,22 @@
             <div class="col-sm-12">
                 <div class="box outheBoxShadow">
                     <div class="box-body outheMargAndBox">
-                        <div class="box-header bg-white">
+                        <!-- <div class="box-header bg-white">
                             <h3 class="box-title fontColor">
                                 <?= $onlineExam->name ?>
                                 <br>
                             </h3>
-                        </div>
+                        </div> -->
 
                         <div class="box-body margAndBox">
                             <nav aria-label="Page navigation">
-                                <ul class="examQuesBox questionColor">
+                                <ul class="examQuesBox questionColor" style="width: 170px !important;">
                                     <?php
                                     foreach ($newArray as $key => $entry) {
                                         ?>
                                         <li><a class="notvisited" id="question<?= $key + 1 ?>" href="javascript:void(0);"
                                                 onclick="jumpQuestion(<?= $key + 1 ?>)">
-                                                <?= $key + 1 ?>
+                                                <?= $entry->nameresult?>
                                             </a></li>
                                         <?php
                                     }
@@ -257,7 +255,7 @@
                             </nav>
 
 
-                            <nav aria-label="Page navigation">
+                            <!-- <nav aria-label="Page navigation">
                                 <h2><?= $this->lang->line('take_exam_summary') ?></h2>
                                 <ul class="examQuesBox text">
                                     <li><a class="answered" id="summaryAnswered" href="#">0</a>
@@ -269,7 +267,7 @@
                                     <li><a class="notvisited" id="summaryNotVisited"
                                             href="#">0</a><?= $this->lang->line('take_exam_not_visited') ?></li>
                                 </ul>
-                            </nav>
+                            </nav> -->
                         </div>
 
                     </div>

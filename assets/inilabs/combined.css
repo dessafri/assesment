@@ -73,6 +73,8 @@
 }
 .examQuesBox > li {
   display: inline-block;
+  width: 170px;
+  height: 60px;
 }
 
 .examQuesBox > li > a {
@@ -84,7 +86,7 @@
     color: #ffffff;
     font-size: 18px;
     font-weight: 700;
-    width: 70px;
+    width: 350px;
     height: 60px;
 }
 
