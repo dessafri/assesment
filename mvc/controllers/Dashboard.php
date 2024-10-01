@@ -81,11 +81,25 @@ public $data;
 			array_push($not_verif, $count_n);
 		}
 		$jsonResult = json_encode($list, JSON_PRETTY_PRINT);
+
+		$list_exam = [];
+		$online_ex = $this->online_exam_m->get_order_by_online_exam();
+		foreach ($online_ex as $key => $exams) {
+			array_push($list_exam, $exams->name);
+		}
+		// dd($list_exam);
 		
+		$this->data['exam'] = $list_exam;
 		$this->data['lapbul_report'] = $list;
 		$this->data['verif'] = $verif;
 		$this->data['not_verif'] = $not_verif;
 		// print_r($list);
+
+		$results = $this->question_level_report_m->get_question_level_report();
+		$reports = [];
+        // foreach ($results as $key => &$result) {
+
+		// }
 
 
 		$schoolyearID = $this->session->userdata('defaultschoolyearID');

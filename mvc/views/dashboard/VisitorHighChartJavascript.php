@@ -104,6 +104,7 @@ $(function() {
 
 </script>
 <script>
+    var exam = <?php echo json_encode($exam)?>;
     var lapbulReport = <?php echo json_encode($lapbul_report); ?>;
     var verif = <?php echo json_encode($verif); ?>;
     var not_verif = <?php echo json_encode($not_verif); ?>;
@@ -120,7 +121,7 @@ Highcharts.chart('container', {
         text: 'Laporan Bulanan'
     },
     xAxis: {
-        categories: lapbulReport
+        categories: exam
     },
     yAxis: {
         min: 0,
@@ -137,4 +138,39 @@ Highcharts.chart('container', {
     }]
 });
 
+</script>
+<script>
+    
+    Highcharts.chart('container1', {
+    chart: {
+        type: 'column'
+    },
+    title: {
+        text: 'Klengkapan Kinerja'
+    },
+    xAxis: {
+        categories: exam
+    },
+    credits: {
+        enabled: false
+    },
+    plotOptions: {
+        column: {
+            borderRadius: '1%'
+        }
+    },
+    series: [{
+        name: 'John',
+        data: [5, 3, 4, 7, 2]
+    }, {
+        name: 'Jane',
+        data: [2, -2, -3, 2, 1]
+    }, {
+        name: 'Joe',
+        data: [3, 4, 4, -2, 5]
+    },{
+        name: 'ASA',
+        data: [3, 4, 4, -2, 5]
+    }]
+});
 </script>

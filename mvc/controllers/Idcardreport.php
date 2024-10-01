@@ -413,6 +413,7 @@ class Idcardreport extends Admin_Controller
                 }
             }
         }
+        // dd($reports);
 
         // $reports[0]['sub_kriteria'][] =  $reports[0]['sub_kriteria'][0];
         // dd($reports);

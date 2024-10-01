@@ -77,40 +77,40 @@ public $load;
 		$result = [];
 		$laps = [];
 		if ($this->session->userdata('usertypeID') == 1){
-			$this->db->select('laporan_bulanan.*, parents.name as p_name'); // Replace '*' with the specific columns you need
+			$this->db->select('laporan_bulanan.*, student.name as p_name'); // Replace '*' with the specific columns you need
 			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
-			$this->db->join('parents', 'parents.parentsID = laporan_bulanan.parent_id','left'); // Replace 'users' with your table name
+			$this->db->join('student', 'student.studentID = laporan_bulanan.create_userID','left'); // Replace 'users' with your table name
 			// $this->db->where('laporan_bulanan.parent_id', $result[0]->parentsID);
-			$this->db->where('MONTH(laporan_bulanan.date)', date('m')); // Filter berdasarkan bulan ini
-			$this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
+			// $this->db->where('MONTH(laporan_bulanan.date)', date('m')); 
+			// $this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
 			$subquery = $this->db->get();
 			if ($subquery->num_rows() > 0) {
 				$laps = $subquery->result();
 			};
 		} else{
-			$this->db->select('*'); // Replace '*' with the specific columns you need
-			$this->db->from('student'); // Replace 'users' with your table name
-			$this->db->join('parents', 'parents.parentsID = student.parentID', 'left');
-			$this->db->where('studentID', $this->session->userdata('loginuserID')); // Assuming 'id' is the column name for user IDs
-			$this->db->limit(1);
-			$query = $this->db->get();
+			// $this->db->select('*'); // Replace '*' with the specific columns you need
+			// $this->db->from('student'); // Replace 'users' with your table name
+			// $this->db->join('parents', 'parents.parentsID = student.parentID', 'left');
+			// $this->db->where('studentID', $this->session->userdata('loginuserID')); // Assuming 'id' is the column name for user IDs
+			// $this->db->limit(1);
+			// $query = $this->db->get();
 			
 
 			
 			// Fetch the result from the first query
-			if ($query->num_rows() > 0) {
-				$result = $query->result();
-				$this->db->select('laporan_bulanan.*, parents.name as p_name'); // Replace '*' with the specific columns you need
-				$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
-				$this->db->join('parents', 'parents.parentsID = laporan_bulanan.parent_id','left'); // Replace 'users' with your table name
-				$this->db->where('laporan_bulanan.parent_id', $result[0]->parentsID);
-				$this->db->where('MONTH(laporan_bulanan.date)', date('m')); // Filter berdasarkan bulan ini
-				$this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
-				$subquery = $this->db->get();
-				if ($subquery->num_rows() > 0) {
-					$laps = $subquery->result();
-				};
+			// if ($query->num_rows() > 0) {
+				// $result = $query->result();
+			$this->db->select('laporan_bulanan.*, student.name as p_name'); // Replace '*' with the specific columns you need
+			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
+			$this->db->join('student', 'student.studentID = laporan_bulanan.create_userID','left'); // Replace 'users' with your table name
+			$this->db->where('laporan_bulanan.create_userID', $this->session->userdata('loginuserID'));
+			// $this->db->where('MONTH(laporan_bulanan.date)', date('m')); // Filter berdasarkan bulan ini
+			// $this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
+			$subquery = $this->db->get();
+			if ($subquery->num_rows() > 0) {
+				$laps = $subquery->result();
 			};
+			// };
 			// dd($laps);
 		}
 		// dd($this->session->userdata());
