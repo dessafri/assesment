@@ -138,7 +138,7 @@
         if(inicompute($generateBoxArray)) {
             foreach ($generateBoxArray as $generateBoxArrayKey => $generateBoxValue) {
     ?>
-    <div class="col-lg-3 col-xs-6">
+    <!-- <div class="col-lg-3 col-xs-6">
         <div class="small-box ">
             <a class="small-box-footer <?=$generateBoxValue['color']?>" href="<?=base_url($generateBoxValue['link'])?>">
                 <div class="icon <?=$generateBoxValue['color']?>" style="padding: 9.5px 18px 8px 18px;">
@@ -155,7 +155,7 @@
                 </div>
             </a>
         </div>
-    </div>
+    </div> -->
     <?php
             }
         }
