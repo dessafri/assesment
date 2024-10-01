@@ -16,7 +16,16 @@
                    ?>
                    <a href="<?=base_url("profile/index")?>">
                     <i class="fa fa-hand-o-right color-green"></i>
-                    <?=$this->session->userdata("usertype")?>
+                    <?php 
+                        if($this->session->userdata("usertype") == 'Admin'){
+                            $type = 'Admin';
+                        }elseif ($this->session->userdata("usertype") == "Student"){
+                            $type = 'Operator';
+                        }else{
+                            $type = $this->session->userdata("usertype");
+                        }
+                        echo $type;
+                    ?>
                 </a>
             </div>
         </div>

@@ -216,6 +216,7 @@ class Take_exam extends Admin_Controller
         $examGivenDataStatus = FALSE;
         $examExpireStatus    = FALSE;
         $examSubjectStatus   = FALSE;
+        
 
 
         if ((int)$onlineExamID !== 0) {
@@ -227,6 +228,7 @@ class Take_exam extends Admin_Controller
                 $array['studentgroupID'] = $this->data['student']->studentgroupID;
                 $array['onlineExamID']   = $onlineExamID;
                 $online_exam             = $this->online_exam_m->get_online_exam_by_student($array);
+                // dd($online_exam);
 
 
                 $userExamCheck = $this->online_exam_user_status_m->get_order_by_online_exam_user_status([
@@ -235,6 +237,7 @@ class Take_exam extends Admin_Controller
                     'sectionID'    => $array['sectionID'],
                     'onlineExamID' => $onlineExamID
                 ]);
+                // dd($userExamCheck);
 
                 if (inicompute($online_exam)) {
                     $DDonlineExam = $online_exam;
@@ -250,21 +253,25 @@ class Take_exam extends Admin_Controller
                     }
 
                     if ($DDonlineExam->examTypeNumber == '4' || $DDonlineExam->examTypeNumber == '5') {
+                        // dd('test');
                         if ($presentDate >= $examStartDate && $presentDate <= $examEndDate) {
                             $examGivenStatus = TRUE;
                         } elseif ($presentDate > $examStartDate && $presentDate > $examEndDate) {
                             $examExpireStatus = TRUE;
                         }
                     } else {
+                        
                         $examGivenStatus = TRUE;
                     }
-
+                    
                     if ($examGivenStatus) {
                         $examGivenStatus = FALSE;
+                        // dd($examGivenStatus);
                         if ($DDonlineExam->examStatus == 2) {
                             $examGivenStatus = TRUE;
                         } else {
                             $userExamCheck = pluck($userExamCheck, 'obj', 'onlineExamID');
+                            // dd($userExamCheck);
                             if (isset($userExamCheck[$DDonlineExam->onlineExamID])) {
                                 $examGivenDataStatus = TRUE;
                             } else {
@@ -784,6 +791,7 @@ class Take_exam extends Admin_Controller
                     $this->data["subview"]           = "online_exam/take_exam/expireandupcoming";
                     return $this->load->view('_layout_main', $this->data);
                 }
+                ;
             } else {
                 var_dump("Error gaes");
                 $this->data["subview"] = "error";
@@ -793,6 +801,7 @@ class Take_exam extends Admin_Controller
             $this->data["subview"] = "error";
             $this->load->view('_layout_main', $this->data);
         }
+        
     }
 
     public function getAnswerList()

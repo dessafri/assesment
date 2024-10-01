@@ -108,6 +108,8 @@ $(function() {
     var lapbulReport = <?php echo json_encode($lapbul_report); ?>;
     var verif = <?php echo json_encode($verif); ?>;
     var not_verif = <?php echo json_encode($not_verif); ?>;
+    var responsible = <?php echo $responsible ?>;
+    console.log(responsible);
     // alert(verif);
     // Data retrieved from https://gs.statcounter.com/browser-market-share#monthly-202201-202201-bar
 
@@ -121,7 +123,7 @@ Highcharts.chart('container', {
         text: 'Laporan Bulanan'
     },
     xAxis: {
-        categories: exam
+        categories: lapbulReport
     },
     yAxis: {
         min: 0,
@@ -159,18 +161,6 @@ Highcharts.chart('container', {
             borderRadius: '1%'
         }
     },
-    series: [{
-        name: 'John',
-        data: [5, 3, 4, 7, 2]
-    }, {
-        name: 'Jane',
-        data: [2, -2, -3, 2, 1]
-    }, {
-        name: 'Joe',
-        data: [3, 4, 4, -2, 5]
-    },{
-        name: 'ASA',
-        data: [3, 4, 4, -2, 5]
-    }]
+    series: responsible
 });
 </script>

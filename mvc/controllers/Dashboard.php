@@ -34,6 +34,7 @@ public $data;
 		$this->load->model('question_group_m');
 		$this->load->model('question_level_m');
 		$this->load->model('question_bank_m');
+		$this->load->model('online_exam_user_status_m');
 		$this->load->model('online_exam_m');
 		$this->load->model('studentgroup_m');
 		$this->load->model('loginlog_m');
@@ -83,23 +84,54 @@ public $data;
 		$jsonResult = json_encode($list, JSON_PRETTY_PRINT);
 
 		$list_exam = [];
+		$exam_ids = [];
 		$online_ex = $this->online_exam_m->get_order_by_online_exam();
 		foreach ($online_ex as $key => $exams) {
 			array_push($list_exam, $exams->name);
+			array_push($exam_ids, $exams->onlineExamID);
 		}
 		// dd($list_exam);
-		
+		// var_dump($exam_ids);
 		$this->data['exam'] = $list_exam;
 		$this->data['lapbul_report'] = $list;
 		$this->data['verif'] = $verif;
 		$this->data['not_verif'] = $not_verif;
 		// print_r($list);
 
-		$results = $this->question_level_report_m->get_question_level_report();
-		$reports = [];
-        // foreach ($results as $key => &$result) {
-
-		// }
+		// $results = $this->question_level_report_m->get_question_level_report();
+		$responsible = [];
+		$student = $this->student_m->get_student();
+		foreach ($student as $key => $students) {
+			$temp = [
+				'name' => $students->name, 
+				'data' => []
+			];
+		
+			// Tambahkan nilai ke dalam score array
+			foreach ($exam_ids as $exam) {
+				
+				$userExamCheck = $this->online_exam_user_status_m->get_order_by_online_exam_user_status([
+                    'userID'       => $students->studentID,
+                    'onlineExamID'    => $exam
+                ]);
+				
+				// dd($userExamCheck);
+				if (inicompute($userExamCheck) > 0){
+					// var_dump($userExamCheck->score_verifikasi);
+					$temp['data'][] = isset($userExamCheck[0]->score_verifikasi) ? (int)$userExamCheck[0]->score_verifikasi : 0;
+				}
+				else{
+					$temp['data'][] = 0;
+				}
+				 // Contoh nilai, bisa diganti dengan nilai dinamis
+			}
+		
+			// Tambahkan array student yang lengkap ke dalam $responsible
+			$responsible[] = $temp;
+		}
+		// die;
+		$this->data['responsible'] =json_encode($responsible, JSON_PRETTY_PRINT);
+		
 
 
 		$schoolyearID = $this->session->userdata('defaultschoolyearID');
