@@ -51,9 +51,12 @@ mysql, mysqli, postgre, odbc, mssql, sqlite, oci8
 $active_group  = 'default';
 $active_record = true;
 $db['default']['hostname'] = '127.0.0.1';
-$db['default']['username'] = 'primavisi';
-$db['default']['password'] = 'gajahmada110703';
-$db['default']['database'] = 'assesment_baru';
+// $db['default']['username'] = 'primavisi';
+// $db['default']['password'] = 'gajahmada110703';
+// $db['default']['database'] = 'assesment_baru';
+$db['default']['username'] = 'root';
+$db['default']['password'] = '';
+$db['default']['database'] = 'newassessment';
 $db['default']['dbdriver'] = 'mysqli';
 $db['default']['dbprefix'] = '';
 $db['default']['pconnect'] = false;

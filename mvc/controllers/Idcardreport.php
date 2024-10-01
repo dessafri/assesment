@@ -397,6 +397,7 @@ class Idcardreport extends Admin_Controller
                                     'question'=> $new_question->question,
                                     'mark'=> $new_question->mark,
                                     'value' => $option->text,
+                                    's_perkara' => $option->s_perkara ? $option->s_perkara : '',
                                     'score'=> $option->score,
                                     'total'=> $option->total_score,
                                     'file' => $option->fileAnswer,

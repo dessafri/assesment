@@ -38,6 +38,7 @@ public $load;
 		$this->load->model("studentrelation_m");
 		$this->load->model("studentgroup_m");
 		$this->load->model("subject_m");
+		$this->load->model("laporan_bulanan");
 		$this->load->model("mailandsmstemplatetag_m");
 		$language = $this->session->userdata('lang');
 		$this->lang->load('certificatereport', $language);
@@ -53,11 +54,221 @@ public $load;
 				'assets/select2/select2.js'
 			)
 		);
+		// if($_POST !== []) {
+		// 	$this->form_validation->set_rules('name', 'Name', 'required');
+            
+        //     // Validasi untuk file (memastikan bahwa file sudah dipilih)
+        //     if (empty($_FILES['file']['name'])) {
+        //         $this->form_validation->set_rules('file', 'File', 'required');
+        //     }
 
+        //     // Jika validasi gagal
+        //     if ($this->form_validation->run() == FALSE) {
+		// 		// $this->session->set_flashdata('error', 'Gagal');
+        //         redirect(base_url('certificatereport'));
+		// 	} else {
+		// 		// $this->session->set_flashdata('success', 'Sukses');		
+		// 		redirect(base_url('certificatereport'));
+		// 	}
+		// }
+		
+		// dd($dataresultpertanyaan);
+		$dataresultpertanyaan = null; // Initialize variable
+		$result = [];
+		$laps = [];
+		if ($this->session->userdata('usertypeID') == 1){
+			$this->db->select('laporan_bulanan.*, parents.name as p_name'); // Replace '*' with the specific columns you need
+			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
+			$this->db->join('parents', 'parents.parentsID = laporan_bulanan.parent_id','left'); // Replace 'users' with your table name
+			// $this->db->where('laporan_bulanan.parent_id', $result[0]->parentsID);
+			$this->db->where('MONTH(laporan_bulanan.date)', date('m')); // Filter berdasarkan bulan ini
+			$this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
+			$subquery = $this->db->get();
+			if ($subquery->num_rows() > 0) {
+				$laps = $subquery->result();
+			};
+		} else{
+			$this->db->select('*'); // Replace '*' with the specific columns you need
+			$this->db->from('student'); // Replace 'users' with your table name
+			$this->db->join('parents', 'parents.parentsID = student.parentID', 'left');
+			$this->db->where('studentID', $this->session->userdata('loginuserID')); // Assuming 'id' is the column name for user IDs
+			$this->db->limit(1);
+			$query = $this->db->get();
+			
+
+			
+			// Fetch the result from the first query
+			if ($query->num_rows() > 0) {
+				$result = $query->result();
+				$this->db->select('laporan_bulanan.*, parents.name as p_name'); // Replace '*' with the specific columns you need
+				$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
+				$this->db->join('parents', 'parents.parentsID = laporan_bulanan.parent_id','left'); // Replace 'users' with your table name
+				$this->db->where('laporan_bulanan.parent_id', $result[0]->parentsID);
+				$this->db->where('MONTH(laporan_bulanan.date)', date('m')); // Filter berdasarkan bulan ini
+				$this->db->where('YEAR(laporan_bulanan.date)', date('Y'));
+				$subquery = $this->db->get();
+				if ($subquery->num_rows() > 0) {
+					$laps = $subquery->result();
+				};
+			};
+			// dd($laps);
+		}
+		// dd($this->session->userdata());
+		// dd($result);
+		$this->data['datas'] = $result;
+		$this->data['subresult'] = $laps;
+		
 		$this->data['classes'] = $this->classes_m->get_classes();		
 		$this->data['templates'] = $this->certificate_template_m->get_certificate_template();
 		$this->data["subview"] = "report/certificate/CertificateReportView";
 		$this->load->view('_layout_main', $this->data);
+	}
+
+	public function add_laporan()
+	{
+		$this->data['classes'] = $this->classes_m->get_classes();		
+		// $this->data['templates'] = $this->certificate_template_m->get_certificate_template();
+		$this->data["subview"] = "report/certificate/create_certificate";
+		$this->load->view('_layout_main', $this->data);
+	}
+
+	public function update_status($id)
+	{
+		if ($id){
+			$this->db->where('id', $id);
+			$this->db->update('laporan_bulanan', ['is_verified' => 1]);
+			if ($this->db->affected_rows() > 0) {
+				redirect(base_url('certificatereport'));
+			} else {
+				redirect(base_url('certificatereport'));
+			}
+		}
+	}
+
+	public function download($fileName) {
+        $filePath = FCPATH . 'uploads/files/' . $fileName; 
+
+        // Cek jika file ada
+        if (file_exists($filePath)) {
+            header('Content-Description: File Transfer');
+            header('Content-Type: application/octet-stream');
+            header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
+            header('Expires: 0');
+            header('Cache-Control: must-revalidate');
+            header('Pragma: public');
+            header('Content-Length: ' . filesize($filePath));
+
+            
+            flush();
+            readfile($filePath);
+            exit;
+        } else {
+            show_404();
+        }
+    }
+
+	public function cretae_laporan()
+	{
+		$name = $this->input->post('name'); // Mengambil input dari field 'name'
+		$file_name = $_FILES['file']['name'];
+		
+		$this->form_validation->set_rules('name', 'Name', 'required');
+            
+		// Validasi untuk file (memastikan bahwa file sudah dipilih)
+		if (empty($_FILES['file']['name'])) {
+			$this->session->set_flashdata('error', 'Gagal menambahkan data');
+			$this->form_validation->set_rules('file', 'File', 'required');
+			
+		}
+		
+		// Jika validasi gagal
+		if ($this->form_validation->run() == FALSE) {
+			redirect(base_url('certificatereport/add_laporan'));
+		} else {
+			$new_file = '';
+                                            
+			$path = "./uploads/files/";
+			if (!is_dir($path)) {
+				mkdir($path, 0755, true); // Create directory with 0755 permissions and recursive flag set to true
+			}
+			$file_name = $_FILES['file']['name'];
+			$random = random19();
+			$makeRandom = hash('sha512', $random.$file_name . date('Y-M-d-H:i:s') . config_item("encryption_key"));
+			$file_name_rename = $makeRandom;
+			$explode = explode('.', (string) $file_name);
+			$new_file = $file_name_rename.'.'.end($explode);
+			// dd($new_file);
+			// die;
+			$config['upload_path'] = $path;
+			$config['allowed_types'] = 'pdf|xls|xlsx'; // Hanya izinkan PDF dan Excel
+        	$config['max_size'] = 2048; // Maksimal 2MB
+			$config['file_name'] = $new_file;
+			$this->load->library('upload');
+			$this->upload->initialize($config);
+
+				// Manually set the file data for this specific file
+			// $_FILES['single_file']['name'] = $fileAnswer['name'][$typeID][$questionID];
+			// $_FILES['single_file']['type'] = $fileAnswer['type'][$typeID][$questionID];
+			// $_FILES['single_file']['tmp_name'] = $fileAnswer['tmp_name'][$typeID][$questionID];
+			// $_FILES['single_file']['error'] = $fileAnswer['error'][$typeID][$questionID];
+			// $_FILES['single_file']['size'] = $fileAnswer['size'][$typeID][$questionID];
+
+			if(!$this->upload->do_upload("file")) {
+				log_message('error', $this->upload->display_errors()); // Log the error message for debugging
+				redirect(base_url('certificatereport/add_laporan'));
+				// dd(log_message('error', $this->upload->display_errors()));
+			}
+			// }else{
+			// dd($file_name_rename );
+			$this->upload->data();
+			$this->db->select('*'); // Specify columns you need, or leave '*' to get all
+			$this->db->from('student'); // Query the 'online_exam' table
+			$this->db->where('studentID', $this->session->userdata('loginuserID')); // Filter by 'parentID'
+			
+			$secondQuery = $this->db->get();
+			$dataresultpertanyaan = [];
+			if ($secondQuery->num_rows() > 0) {
+				$dataresultpertanyaan = $secondQuery->result(); // Store the result as an array of objects
+			}
+			$now = new DateTime();
+			// dd($dataresultpertanyaan[0]->parentID);
+			
+			$array = [
+				'name' => $name,
+				'parent_id' => $dataresultpertanyaan[0]->parentID,
+				'file' => $new_file,
+				'create_userID' => $this->session->userdata('loginuserID'),
+				'create_usertypeID' => $dataresultpertanyaan[0]->usertypeID,
+				'original_name' => $file_name,
+				'date' => $now->format('Y-m-d')
+			];
+			// dd($dataresultpertanyaan);
+			$this->session->set_flashdata('success', 'Data berhasil ditambahkan');
+			$this->laporan_bulanan->insert($array);
+			redirect(base_url('certificatereport'));
+			
+			// } 
+			
+			// $this->session->set_flashdata('success', 'Sukses');		
+			
+		}
+	}
+
+	public function file_check() {
+		$allowed_mime_type_arr = ['application/pdf', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+		$mime = get_mime_by_extension($_FILES['file']['name']);
+	
+		if (isset($_FILES['file']['name']) && $_FILES['file']['name'] != "") {
+			if (in_array($mime, $allowed_mime_type_arr)) {
+				return TRUE;
+			} else {
+				$this->form_validation->set_message('file_check', 'Please select only PDF/Excel files.');
+				return FALSE;
+			}
+		} else {
+			$this->form_validation->set_message('file_check', 'Please choose a file to upload.');
+			return FALSE;
+		}
 	}
 
 	protected function rules() 

@@ -72,6 +72,7 @@ class Take_exam extends Admin_Controller
         $this->load->model('section_m');
         $this->load->model('subject_m');
         $this->load->model('payment_gateway_m');
+        $this->load->model('laporan_bulanan');
         $this->load->model('payment_gateway_option_m');
         $language = $this->session->userdata('lang');
         $this->lang->load('take_exam', $language);
@@ -192,6 +193,7 @@ class Take_exam extends Admin_Controller
             $this->load->view('_layout_main', $this->data);
         }
     }
+
 
     public function show() //done
     {
@@ -379,12 +381,15 @@ class Take_exam extends Admin_Controller
                     $this->data['options'] = $options;
                     $this->data['answers'] = $answers;
                 }
+                // print_r($alq
 
 
                 /**
                  * STORE DATA
-                 */
+                 */ 
                 if ($_POST !== []) {
+                    // print_r('TEST');
+                    // die;
                     // Start transaction
                     $this->db->trans_begin();
 
@@ -392,6 +397,7 @@ class Take_exam extends Admin_Controller
                         $time               = date("Y-m-d h:i:s");
                         $mainQuestionAnswer = [];
                         $userAnswer         = $this->input->post('answer');
+                        $s_perkara         = $this->input->post('s_perkara');
                         $fileAnswer         = [];
                         if(!empty($_FILES)){
                             $fileAnswer = $_FILES['file'];
@@ -404,6 +410,8 @@ class Take_exam extends Admin_Controller
                         $totalNilaiMark    = 0;
                         $totalNilaiBobot   = 0;
                         $visited           = [];
+                        // print_r($allAnswers);
+                        // die;
                         foreach ($allAnswers as $answer) {
                             if ($answer->typeNumber == 3) {
                                 $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][$answer->answerID] = $answer->text;
@@ -415,7 +423,8 @@ class Take_exam extends Admin_Controller
                                 $mainQuestionAnswer[$answer->typeNumber][$answer->questionID][] = $answer->optionID;
                             }
                         }
-
+                        // print_r($mainQuestionAnswer);
+                        // die;
                         $totalAnswer = 0;
                         if (inicompute($userAnswer)) {
                             foreach ($userAnswer as $userAnswerKey => $uA) {
@@ -457,6 +466,7 @@ class Take_exam extends Admin_Controller
                         $user_options=[];
                         $user_answer =[];
                         foreach ($mainQuestionAnswer as $typeID => $questions) {
+                
                             if (!isset($userAnswer[$typeID]))
                                 continue;
                             foreach ($questions as $questionID => $options) {
@@ -548,53 +558,70 @@ class Take_exam extends Admin_Controller
                                         }
                                     } elseif ($typeID == 5) {
                                         foreach ($options as $answerID => $answer) {
-                                            $new_file = '';
-                                            if ($fileAnswer['name'][$typeID][$questionID] != "") {
-                                                $path = "./uploads/files/";
-                                                if (!is_dir($path)) {
-                                                    mkdir($path, 0755, true); // Create directory with 0755 permissions and recursive flag set to true
-                                                }
-                                                $file_name = $fileAnswer['name'][$typeID][$questionID];
-                                                $random = random19();
-                                                $makeRandom = hash('sha512', $random.$fileAnswer['name'][$typeID][$questionID].date('Y-M-d-H:i:s') . config_item("encryption_key"));
-                                                $file_name_rename = $makeRandom;
-                                                $explode = explode('.', (string) $file_name);
-                                                if(inicompute($explode) >= 2) {
-                                                    $new_file = $file_name_rename.'.'.end($explode);
-                                                    $config['upload_path'] = $path;
-                                                    $config['allowed_types'] = "pdf|jpg|jpeg|png";
-                                                    $config['file_name'] = $new_file;
-                                                    $config['max_size'] = (1024*20);
-                                                    $config['max_width'] = '3000';
-                                                    $config['max_height'] = '3000';
-                                                    $this->load->library('upload');
-                                                    $this->upload->initialize($config);
+                                            // $new_file = '';
+                                            // if ($fileAnswer['name'][$typeID][$questionID] != "") {
+                                            //     $path = "./uploads/files/";
+                                            //     if (!is_dir($path)) {
+                                            //         mkdir($path, 0755, true); // Create directory with 0755 permissions and recursive flag set to true
+                                            //     }
+                                            //     $file_name = $fileAnswer['name'][$typeID][$questionID];
+                                            //     $random = random19();
+                                            //     $makeRandom = hash('sha512', $random.$fileAnswer['name'][$typeID][$questionID].date('Y-M-d-H:i:s') . config_item("encryption_key"));
+                                            //     $file_name_rename = $makeRandom;
+                                            //     $explode = explode('.', (string) $file_name);
+                                            //     if(inicompute($explode) >= 2) {
+                                            //         $new_file = $file_name_rename.'.'.end($explode);
+                                            //         $config['upload_path'] = $path;
+                                            //         $config['allowed_types'] = "pdf|jpg|jpeg|png";
+                                            //         $config['file_name'] = $new_file;
+                                            //         $config['max_size'] = (1024*20);
+                                            //         $config['max_width'] = '3000';
+                                            //         $config['max_height'] = '3000';
+                                            //         $this->load->library('upload');
+                                            //         $this->upload->initialize($config);
     
-                                                    // Manually set the file data for this specific file
-                                                    $_FILES['single_file']['name'] = $fileAnswer['name'][$typeID][$questionID];
-                                                    $_FILES['single_file']['type'] = $fileAnswer['type'][$typeID][$questionID];
-                                                    $_FILES['single_file']['tmp_name'] = $fileAnswer['tmp_name'][$typeID][$questionID];
-                                                    $_FILES['single_file']['error'] = $fileAnswer['error'][$typeID][$questionID];
-                                                    $_FILES['single_file']['size'] = $fileAnswer['size'][$typeID][$questionID];
+                                            //         // Manually set the file data for this specific file
+                                            //         $_FILES['single_file']['name'] = $fileAnswer['name'][$typeID][$questionID];
+                                            //         $_FILES['single_file']['type'] = $fileAnswer['type'][$typeID][$questionID];
+                                            //         $_FILES['single_file']['tmp_name'] = $fileAnswer['tmp_name'][$typeID][$questionID];
+                                            //         $_FILES['single_file']['error'] = $fileAnswer['error'][$typeID][$questionID];
+                                            //         $_FILES['single_file']['size'] = $fileAnswer['size'][$typeID][$questionID];
     
-                                                    if(!$this->upload->do_upload("single_file")) {
-                                                        log_message('error', $this->upload->display_errors()); // Log the error message for debugging
-                                                        $this->form_validation->set_message("fileupload", $this->upload->display_errors());
-                                                    }else{
-                                                        $this->upload_data[$typeID][$questionID] =  $this->upload->data();
-                                                    } 
-                                                }
-                                            }
+                                            //         if(!$this->upload->do_upload("single_file")) {
+                                            //             log_message('error', $this->upload->display_errors()); // Log the error message for debugging
+                                            //             $this->form_validation->set_message("fileupload", $this->upload->display_errors());
+                                            //         }else{
+                                            //             $this->upload_data[$typeID][$questionID] =  $this->upload->data();
+                                            //         } 
+                                            //     }
+                                            // }
 
                                             // save jawaban
                                             $takeAnswer = strtolower((string) $answer);
                                             $getAnswer  = isset($userAnswer[$typeID][$questionID]) ? strtolower((string) $userAnswer[$typeID][$questionID]) : '';
+                                            $get_perkara  = isset($s_perkara[$typeID][$questionID]) ? strtolower((string) $s_perkara[$typeID][$questionID]) : '';
                                             $score = floatval($getAnswer) * $questionsBank[$questionID]->mark;
 
                                             $question_group = $this->question_group_m->get_single_question_group(['questionGroupID'=>$questionsBank[$questionID]->groupID]);
                                             $total_score = $score * ($question_group->bobot/100);
                                             $totalNilaiMark += $score;
                                             $totalNilaiBobot += $total_score;
+                                            // $test = [
+                                            //     'questionID'           => $questionID,
+                                            //     'typeID'               => $typeID,
+                                            //     'text'                 => $getAnswer,
+                                            //     'time'                 => $time,
+                                            //     'onlineExamID'         => $onlineExamID,
+                                            //     'examtimeID'           => $examTimeCounter,
+                                            //     'userID'               => $userID,
+                                            //     'relasi_jabatan'       => $relasi,
+                                            //     's_Perkara'            => $get_perkara,
+                                            //     // 'fileAnswer'           => $new_file != '' ? $path.$new_file : null,
+                                            //     'score'                => $score,
+                                            //     'total_score'          => $total_score,
+                                            // ];
+                                            // print_r($test);
+                                            
                                             $this->online_exam_user_answer_option_m->insert([
                                                 'questionID'           => $questionID,
                                                 'typeID'               => $typeID,
@@ -604,12 +631,15 @@ class Take_exam extends Admin_Controller
                                                 'examtimeID'           => $examTimeCounter,
                                                 'userID'               => $userID,
                                                 'relasi_jabatan'       => $relasi,
-                                                'fileAnswer'           => $new_file != '' ? $path.$new_file : null,
+                                                's_Perkara'            => $get_perkara,
+                                                // 'fileAnswer'           => $new_file != '' ? $path.$new_file : null,
                                                 'score'                => $score,
                                                 'total_score'          => $total_score,
                                             ]);
                                             $user_options[] = $this->db->insert_id();
                                         }
+                                        
+                                        
                                     }
 
                                     if ($f === 0) {
@@ -619,6 +649,7 @@ class Take_exam extends Admin_Controller
                                     }
                                 }
                             }
+                            // die;
                         }
                         
                         if (inicompute($this->data['onlineExam'])) {
@@ -824,6 +855,8 @@ class Take_exam extends Admin_Controller
             $this->load->view('_layout_main', $this->data);
         }
     }
+
+
 
     public function instruction() //done
     {

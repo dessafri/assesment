@@ -315,6 +315,7 @@ function permissionChecker($data)
 {
     $CI = &get_instance();
     $sessionPermission = $CI->session->userdata('master_permission_set');
+    // dd($sessionPermission);
     if (isset($sessionPermission[$data]) && $sessionPermission[$data] == 'yes') {
         return true;
     }

@@ -3,71 +3,80 @@
         <h3 class="box-title"><i class="fa fa-certificate"></i> Laporan Bulanan</h3>
         <ol class="breadcrumb">
             <li><a href="<?=base_url("dashboard/index")?>"><i class="fa fa-laptop"></i> <?=$this->lang->line('menu_dashboard')?></a></li>
-            <li class="active">Laporan Bulnan</li>
+            <li><a href="<?=base_url("certificatereport/index")?>">Laporan Bulanan</a></li>
+            <li class="active">Add</li>
         </ol>
     </div><!-- /.box-header -->
     <!-- form start -->
     <div class="box-body">
         <div class="row">
-        
             <div class="col-sm-12">
-            <h5 class="page-header">
-            <a href="<?php echo base_url('certificatereport/add_laporan') ?>">
-                <i class="fa fa-plus"></i>
-                Upload Laporan
-            </a>
-                    </h5>
-            <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
-                <thead>
-                    <tr>
-                        <th width="2%">No</th>
-                        <th>Parent</th>
-                        <th width="20%">Nama</th>
-                        <th width="30%">File Name</th>
-                        <th> Status </th>
-                        <th> Date </th>
-                        <th >Action</th>
-                    </tr>
-                </thead>
-                <tbody>
+                
+                <form class="form-horizontal" action="<?php echo base_url('certificatereport/cretae_laporan'); ?>" role="form" method="post" id="laporan_bulanan"
+                     enctype="multipart/form-data">
                     <?php
-                    $i = 1; foreach($subresult as $key => $report) {
+                        if (form_error('name')) {
+                            echo "<div class='form-group has-error' >";
+                        } else {
+                            echo "<div class='form-group' >";
+                        }
+
+                        ?>
+                        <label for="name" class="col-sm-1 control-label">
+                            Nama <span class='text-red'>*</span>
+                        </label>
+                        <div class="col-sm-6">
+                            <input type="text" class="form-control" id="name" name="name" value="<?=set_value('name')?>" >
+                        </div>
+                        <span class="col-sm-4 control-label">
+                            <?php echo form_error('name'); ?>
+                        </span>
+                    </div>
+                    <?php
+                    if (form_error('file')) {
+                        echo "<div class='form-group has-error' >";
+                    } else {
+                        echo "<div class='form-group' >";
+                    }
+
                     ?>
-                        <tr>
-                            <!-- <td class="hidden"><?=$key?></td> -->
-                            <td data-title="id"><?php echo $i; ?></td>
-                            <td data-title="namaKaryawan"><?=$report->p_name?></td>
-                            <td data-title="namaKaryawan"><?=$report->name?></td>
-                            <td><a href="<?= base_url('certificatereport/download/'.strval($report->file))?>"><?= $report->original_name ?></a></td>
-                            <?php
-                            if ($report->is_verified == 1){
-                                $state = 'Verified';
-                            }else{
-                                $state = 'Not Verified';
-                            }
-                            ?>
-                             <td><?= $state ?></td>
-                             <td><?= $report->date ?></td>
-                             <td>
-                                <?php
-                                if ($this->session->userdata('usertypeID') == 1){
-                                 ?>
-                                 <?php 
-                                 if ($report->is_verified == 0)
-                                 { ?>
-                                 <a href="<?= base_url('certificatereport/update_status/' . strval($report->id))?>" class="btn btn-success" >Verifikasi</a>
-                                 <?php } ?>
-                                 
-                                 <?php }?>
-                                
-                            </td>
-                            
-                        </tr>
-                    <?php $i++; }
-                     ?>
-                </tbody>
-            </table>
-            
+                    <label for="file" class="col-sm-1 control-label">
+                        Dokumen <span class='text-red'>*</span>
+                    </label>
+                    <div class="col-sm-6">
+                        <div class="input-group image-preview">
+                            <input type="text" class="form-control image-preview-filename" disabled="disabled">
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default image-preview-clear" style="display:none;">
+                                    <span class="fa fa-remove"></span>
+                                    <?=$this->lang->line('question_bank_clear')?>
+                                </button>
+                                <div class="btn btn-success image-preview-input">
+                                    <span class="fa fa-repeat"></span>
+                                    <span class="image-preview-input-title">
+                                    Unggah File</span>
+                                    <input type="file" name="file"/>
+                                    <?php echo form_error('file'); ?>
+                                </div>
+                            </span>
+                        </div>
+                    </div>
+                    <br>
+                    <div class="form-group">
+                        <div class="col-sm-offset-1 col-sm-8" style="padding-left: 28px; margin-top: 20px;">
+                        <button type="submit" class="btn btn-success">Submit Laporan</button>
+                        </div>
+                    </div>
+                    <!-- <div class="form-group">
+                        <div class="col-sm-1 mt-3 offset-2 col-sm-8">
+                            <button type="submit" class="btn btn-success">Upload Laporan</button>
+                        </div>
+                    </div> -->
+                </form>
+                <hr>
+                
+                
+                
                 <!-- <div class="form-group col-sm-4" id="classesDiv">
                     <label><?=$this->lang->line("certificatereport_class")?></label><span class="text-red">*</span>
                     <?php
@@ -210,22 +219,7 @@
                     }
                 }
             ],
-        });
-        // $('#example1 tbody').on('click', '.showDetails', function() {
-        //         var tr = $(this).closest('tr');
-        //         var row = parentTable.row(tr);
-        //         var dt = row.data();
-        //         console.log('test');
-
-        //         if (row.child.isShown()) {
-        //             row.child.hide();
-        //             tr.removeClass('shown');
-        //         } else {
-        //             row.child(formatDetails(dt[0])).show();
-        //             tr.addClass('shown');
-        //         }
-        //     });
-            
+        })
     });
         
 </script>

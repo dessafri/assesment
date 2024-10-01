@@ -125,6 +125,7 @@ class Admin_Controller extends MY_Controller {
         $sessionPermission     = $this->session->userdata('master_permission_set');
         $dbMenus               = $this->_menuTree(json_decode(json_encode(pluck($this->menu_m->get_order_by_menu([ 'status' => 1]),
             'obj', 'menuID')), true), $sessionPermission);
+        // dd($sessionPermission);
         $this->data["dbMenus"] = $dbMenus;
 
         if ( ( isset($sessionPermission[ $permission ]) && $sessionPermission[ $permission ] == "no" ) ) {

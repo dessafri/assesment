@@ -1,4 +1,11 @@
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/data.js"></script>
+<script src="https://code.highcharts.com/modules/drilldown.js"></script>
+<script src="https://code.highcharts.com/modules/exporting.js"></script>
+<script src="https://code.highcharts.com/modules/export-data.js"></script>
+<script src="https://code.highcharts.com/modules/accessibility.js"></script>
 <script type="application/javascript">
+    
 $(function() {
     LoadVisitor();
     function LoadVisitor()
@@ -94,5 +101,40 @@ $(function() {
 
 });
 
+
+</script>
+<script>
+    var lapbulReport = <?php echo json_encode($lapbul_report); ?>;
+    var verif = <?php echo json_encode($verif); ?>;
+    var not_verif = <?php echo json_encode($not_verif); ?>;
+    // alert(verif);
+    // Data retrieved from https://gs.statcounter.com/browser-market-share#monthly-202201-202201-bar
+
+// Create the chart
+
+Highcharts.chart('container', {
+    chart: {
+        type: 'column' // Tipe chart batang
+    },
+    title: {
+        text: 'Laporan Bulanan'
+    },
+    xAxis: {
+        categories: lapbulReport
+    },
+    yAxis: {
+        min: 0,
+        title: {
+            text: 'Jumlah'
+        }
+    },
+    series: [{
+        name: 'Verified',
+        data: verif
+    }, {
+        name: 'Not Verified',
+        data: not_verif
+    }]
+});
 
 </script>

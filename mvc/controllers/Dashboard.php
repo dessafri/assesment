@@ -30,6 +30,7 @@ public $data;
 		$this->load->model("parents_m");
 		$this->load->model("subject_m");
 		$this->load->model('event_m');
+		$this->load->model('laporan_bulanan');
 		$this->load->model('question_group_m');
 		$this->load->model('question_level_m');
 		$this->load->model('question_bank_m');
@@ -53,6 +54,38 @@ public $data;
 				'assets/highcharts/exporting.js'
 			)
 		);
+		$list = [];
+		$verif = [];
+		$not_verif = [];
+		$parents = $this->student_m->get_student(); // Ambil data parents
+
+		foreach ($parents as $key => $value) {
+			// Hitung jumlah laporan bulanan per parent
+			$this->db->select('*'); // Replace '*' with the specific columns you need
+			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
+			$this->db->where('create_userID', $value->studentID);
+			$this->db->where('is_verified', 1);
+			$subquery = $this->db->get();
+			$count = $subquery->num_rows();
+			array_push($list, $value->name,  // Menggunakan nama parent
+				// 'y' => $count,     // Jumlah laporan bulanan
+				// 'drilldown' => $value->name // Drilldown berdasarkan nama parent
+			);
+			array_push($verif, $count);
+			$this->db->select('*'); // Replace '*' with the specific columns you need
+			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
+			$this->db->where('create_userID', $value->studentID);
+			$this->db->where('is_verified', 0);
+			$n_subquery = $this->db->get();
+			$count_n = $n_subquery->num_rows();
+			array_push($not_verif, $count_n);
+		}
+		$jsonResult = json_encode($list, JSON_PRETTY_PRINT);
+		
+		$this->data['lapbul_report'] = $list;
+		$this->data['verif'] = $verif;
+		$this->data['not_verif'] = $not_verif;
+		// print_r($list);
 
 
 		$schoolyearID = $this->session->userdata('defaultschoolyearID');

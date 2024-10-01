@@ -120,7 +120,8 @@
                             <th rowspan='2'>Jumlah</th>
                             <th rowspan='2'>Nilai</th>
                             <th rowspan='2'>Total</th>
-                            <th rowspan='2'>Bukti</th>
+                           
+                            <th rowspan='2'>Surat Perkara</th>
                             <th colspan='3' class='text-center'>Verifikasi</th>
                             <th rowspan='2'>Catatan</th>
                         </tr>
@@ -130,7 +131,7 @@
                             <th>Total</th>
                         </tr>
                 `;
-                
+                // <th rowspan='2'>Bukti</th>
                 $.map(val.sub_tahap, function(detailVal, detailKey) {
                     template += `
                         <tr>
@@ -146,9 +147,8 @@
                                 <td>${soal.value}</td>
                                 <td>${soal.score}</td>
                                 <td>${soal.total}</td>
-                                <td>
-                                    <a target='_blank' class='${soal.file ? '' : 'disabled'}' href="${soal.file ? soal.file : '#' }"><i class='fa fa-file'></i> ${soal.file ? 'File' : 'No File'}</a>
-                                </td>
+                                
+                                <td>${soal.s_perkara}</td>
                                 `;
                         if(soal.is_verif == 1){
                             template += `
@@ -172,6 +172,9 @@
                         template +=`</tr><tr><td colspan='10'></td></tr>`;
                     });
                 });
+                // <td>
+                                //     <a target='_blank' class='${soal.file ? '' : 'disabled'}' href="${soal.file ? soal.file : '#' }"><i class='fa fa-file'></i> ${soal.file ? 'File' : 'No File'}</a>
+                                // </td>
                 template += `
                     
                 </table>`

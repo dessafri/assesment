@@ -143,11 +143,15 @@
                                                                 <label for="answer<?= $question->questionBankID ?>">Masukkan jawaban</label>
                                                                 <input type="number" name="answer[<?= $question->typeNumber ?>][<?= $question->questionBankID ?>]" id="answer<?= $question->questionBankID ?>" value="" class="form-control">
                                                             </div>
-                        
                                                             <div class="form-group">
+                                                                <label for="s_perkara<?= $question->questionBankID ?>">Surat Perkara</label>
+                                                                <input style="text-align: left;" type="text" name="s_perkara[<?= $question->typeNumber ?>][<?= $question->questionBankID ?>]" id="s_perkara<?= $question->questionBankID ?>" value="" class="form-control">
+                                                            </div>
+                        
+                                                            <!-- <div class="form-group">
                                                                 <label for="file<?= $question->questionBankID ?>">Masukkan file</label>
                                                                 <input type="file" id="file<?= $question->questionBankID ?>" name="file[<?= $question->typeNumber ?>][<?= $question->questionBankID ?>]" class="form-control">
-                                                            </div>
+                                                            </div> -->
                                                         </td>
                                                     </tr>
                                                 <?php

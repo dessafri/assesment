@@ -92,6 +92,7 @@ $lang['menu_main_attendance'] = 'Katılım';
 $lang['menu_main_exam'] = 'Sınav';
 $lang['menu_main_mark'] = 'işaret';
 $lang['menu_main_online_exam'] = 'Online Sınav';
+$lang['lap_bul'] = 'Laporan Bulanan';
 $lang['menu_markpercentage'] = 'Yüzdeyi İşaretle';
 $lang['menu_setting'] = 'Genel Ayarlar';
 $lang['menu_uattendance'] = 'Kullanıcı Katılımı';

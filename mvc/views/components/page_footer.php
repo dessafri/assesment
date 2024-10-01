@@ -93,6 +93,7 @@
                     "hideMethod": "fadeOut"
                 }
             </script>
+            <?php $this->session->unset_userdata('success');?>
         <?php endif ?>
         <?php if ($this->session->flashdata('error')): ?>
            <script type="text/javascript">
@@ -116,6 +117,7 @@
                     "hideMethod": "fadeOut"
                 }
             </script>
+            <?php $this->session->unset_userdata('error');?>
         <?php endif ?>
 
         <?php

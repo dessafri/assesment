@@ -28,7 +28,7 @@
                         </a>
                     </h5>
                 <?php } ?>
-
+                        
                 <div id="hide-table">
                     <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                         <thead>
