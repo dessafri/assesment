@@ -104,7 +104,7 @@ if (form_error('mark')) {
                         </span>
                     </div>
 
-                    <?php
+                    <!-- <?php
 if (form_error('explanation')) {
     echo "<div class='form-group has-error' >";
 } else {
@@ -121,8 +121,8 @@ if (form_error('explanation')) {
                         <span class="col-sm-4 control-label">
                             <?php echo form_error('explanation'); ?>
                         </span>
-                    </div>
-
+                    </div> -->
+<!-- 
                     <?php
 if (form_error('photo')) {
     echo "<div class='form-group has-error' >";
@@ -174,7 +174,7 @@ if (form_error('hints')) {
                         <span class="col-sm-4 control-label">
                             <?php echo form_error('hints'); ?>
                         </span>
-                    </div>
+                    </div> -->
 
                     <?php
 if (form_error('mark')) {
