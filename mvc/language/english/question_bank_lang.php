@@ -1,12 +1,12 @@
 <?php
 
 /* List Language  */
-$lang['panel_title'] = "Question Bank";
-$lang['add_title'] = "Add a Question Bank";
+$lang['panel_title'] = "Pertanyaan";
+$lang['add_title'] = "Tambah Pertanyaan";
 $lang['slno'] = "#";
 $lang['question_bank_question'] = "Question";
 $lang['question_bank_explanation'] = "Explanation";
-$lang['question_bank_mark'] = "Mark";
+$lang['question_bank_mark'] = "Point";
 $lang['question_bank_group'] = "Question Group";
 $lang['question_bank_level'] = "Difficulty Level";
 $lang['question_bank_type'] = "Question Type";
@@ -31,8 +31,8 @@ $lang["mail"] = "Send Pdf to Mail";
 
 /* Add Language */
 
-$lang['add_class'] = 'Add Question bank';
-$lang['update_class'] = 'Update Question bank';
+$lang['add_class'] = 'Tambah Pertanyaan';
+$lang['update_class'] = 'Update Pertanyaan';
 
 $lang['to'] = 'To';
 $lang['subject'] = 'Subject';
