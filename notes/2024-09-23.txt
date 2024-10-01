@@ -1,0 +1,24 @@
+jawaban berupa angka
+file dihapus
+input nomer surat
+
+
+admin :
+    pada menu dashboard muncul 2 pilihan : kinerja dan lapbul
+    - dashboard lapbul 
+    - dashboard kinerja
+
+    grafik pengunjung diganti -> 
+    rekapitulasi -> kelengkapan lapbul dan kinerja di buat per kejati dalam bentuk diagram batang
+
+    kalender dashboard dihapus
+
+    rekapitulasi realisasi
+    tunggakan - mutasi kurang
+
+    lapbul -> nama per form upload pdf dan tombol verifikasi dari atasan secara langsung
+
+    kelengkapan 
+    kecepatan : tgl 1 
+    keakuratan
+    data 
