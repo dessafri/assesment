@@ -14,6 +14,7 @@ ALTER TABLE assesment.online_exam_user_answer_option ADD catatan text NULL;
 ALTER TABLE assesment.online_exam_user_answer_option ADD score double NULL;
 ALTER TABLE assesment.online_exam_user_answer_option ADD actual_value double NULL; -- jawaban admin
 ALTER TABLE assesment.online_exam_user_answer_option ADD actual_score double NULL; -- nilai jawaban admin
+ALTER TABLE assesment.online_exam_user_answer_option ADD total_actual_score double NULL; -- nilai jawaban admin
 ALTER TABLE assesment.online_exam_user_answer_option ADD is_verif BOOL DEFAULT false NULL;
 ALTER TABLE newassessment.online_exam_user_answer_option ADD s_perkara VARCHAR(255) NULL; --Surat perkara
 -- 

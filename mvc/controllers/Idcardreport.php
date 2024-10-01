@@ -407,18 +407,6 @@ class Idcardreport extends Admin_Controller
                                     'catatan' => $option->catatan,
                                     'is_verif' => $option->is_verif
                                 ];
-                                // optionid
-                                // questionid
-                                //pertanyaan
-                                //poin
-                                //jumlah/value
-                                //nilai = jumlah * poin
-                                //total  = nilai * bobot
-                                //bukti
-                                //input admin
-                                //nilai admin
-                                //total admin
-                                // catatan
                             }
                         }
                     }
@@ -426,6 +414,7 @@ class Idcardreport extends Admin_Controller
             }
         }
 
+        // $reports[0]['sub_kriteria'][] =  $reports[0]['sub_kriteria'][0];
         // dd($reports);
 
         $this->data['subtype'] = $types;

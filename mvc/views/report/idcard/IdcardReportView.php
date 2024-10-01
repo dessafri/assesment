@@ -104,9 +104,11 @@
         // Function to format the details to be displayed in the child row
         function formatDetails(idx) {
             var sub = reports[idx]['sub_kriteria'];
-            var template = `<div class='box'>`
+            var template = ``
             // console.log(sub)
             $.map(sub, function(val, i){
+                template += `<div class='box' style='margin-bottom:20px'>`
+                var verif = false;
                 // Build the outer table with header
                 template += `
                 <div class='box-header'>
@@ -139,10 +141,13 @@
                         </tr>
                         `
 
+                    let no=0;
                     $.map(detailVal.detail_soal, function(soal, soalKey) {
+                        no++
+                        verif = soal.is_verif == 1? true: false;
                         template += `
                             <tr>
-                                <td>${soal.question}</td>
+                                <td>${no}. ${soal.question}</td>
                                 <td>${soal.mark}</td>
                                 <td>${soal.value}</td>
                                 <td>${soal.score}</td>
@@ -172,19 +177,17 @@
                         template +=`</tr><tr><td colspan='10'></td></tr>`;
                     });
                 });
-                // <td>
-                                //     <a target='_blank' class='${soal.file ? '' : 'disabled'}' href="${soal.file ? soal.file : '#' }"><i class='fa fa-file'></i> ${soal.file ? 'File' : 'No File'}</a>
-                                // </td>
-                template += `
-                    
-                </table>`
+                template += `</table>`
 
-                template += `
-                <div class='row'>
-                    <div class='col text-right'>
-                        <button class="btn btn-success" style='margin-right:15px;margin-top:20px' data-status='${val.status_id}' data-group='${val.group_id}' data-index='${idx}-${val.level_report_id}'>Verifikasi</button>
-                    </div>
-                </div>`;
+                if(!verif){
+                    template += `
+                    <div class='row' style='margin-bottom:20px'>
+                        <div class='col text-right'>
+                            <button class="btn btn-success" style='margin-right:15px;margin-top:20px' data-status='${val.status_id}' data-group='${val.group_id}' data-index='${idx}-${val.level_report_id}'>Verifikasi</button>
+                        </div>
+                    </div>`;
+                }
+                template +='</div>'
             });
 
             return template;
