@@ -48,8 +48,8 @@
                         <div id="hide-table">
                         <div class="row">
                             <?php foreach ($pertanyaan as $row): ?>
-                                <div class="col-md-4" style="margin-top: 20px;">
-                                        <div class="panel panel-default" style="background-color: #23292F">
+                                <div class="col-md-6 col">
+                                        <div class="panel panel-default" style="background-color: #dd4b39">
                                             <div class="panel-body">
                                                 <h5 class="panel-title" style="margin-bottom: 40px; color: white;"><?php echo $row->name; ?></h5>
                                                 <?php

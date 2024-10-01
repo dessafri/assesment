@@ -21,12 +21,12 @@
             </div>
         </div>
 
-        <?php $usertype = $this->session->userdata("usertype"); ?>
+        <?php $usertype = $this->session->userdata("usertype");  ?>
         <ul class="sidebar-menu">
             <?php
             if(inicompute($dbMenus)) {
                 $menuDesign = '';
-                display_menu($dbMenus, $menuDesign);
+                display_menu($dbMenus, $menuDesign, $usertype);
                 echo $menuDesign;
             }
             ?>
