@@ -32,7 +32,8 @@ ALTER TABLE assesment.question_level_report ADD onlineExamUserStatus int NULL;
 ALTER TABLE assesment.online_exam_user_status ADD score_verifikasi DOUBLE NULL;
 ALTER TABLE assesment.online_exam_user_status MODIFY COLUMN score double NOT NULL;
 
-
+INSERT INTO permissions (description, name)
+VALUES ('Laporan Bulanan', 'laporan_bulanan');
 -- Laporan Bulanan --
 CREATE TABLE IF NOT EXISTS `laporan_bulanan` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
@@ -47,8 +48,7 @@ CREATE TABLE IF NOT EXISTS `laporan_bulanan` (
   `is_verified` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 )
-INSERT INTO permissions (description, name)
-VALUES ('Laporan Bulanan', 'laporan_bulanan');
+
 
 
 -- add new menu lapbul --
