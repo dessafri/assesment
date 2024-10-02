@@ -210,7 +210,7 @@
     <div class="col-sm-12">
         <div class="box">
             <div class="box-body">
-                <div id="calendar"></div>
+                <!-- <div id="calendar"></div> -->
             </div>
         </div>
     </div>
