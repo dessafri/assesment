@@ -183,6 +183,7 @@ public $load;
 		
 		// Jika validasi gagal
 		if ($this->form_validation->run() == FALSE) {
+			$this->session->set_flashdata('error', 'Gagal Menambahkan Data');
 			redirect(base_url('certificatereport/add_laporan'));
 		} else {
 			$new_file = '';
