@@ -12,7 +12,7 @@
         <div class="row">
             <div class="col-sm-12">
                 
-                <form class="form-horizontal" action="<?php echo base_url('certificatereport/cretae_laporan'); ?>" role="form" method="post" id="laporan_bulanan"
+                <form class="form-horizontal" action="<?php echo base_url('certificatereport/create_laporan'); ?>" role="form" method="post" id="laporan_bulanan"
                      enctype="multipart/form-data">
                     <?php
                         if (form_error('name')) {

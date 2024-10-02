@@ -167,9 +167,9 @@ public $load;
         }
     }
 
-	public function cretae_laporan()
+	public function create_laporan()
 	{
-		$name = $this->input->post('name'); // Mengambil input dari field 'name'
+		$name = $this->input->post('name');
 		$file_name = $_FILES['file']['name'];
 		
 		$this->form_validation->set_rules('name', 'Name', 'required');
@@ -188,11 +188,12 @@ public $load;
 		} else {
 			$new_file = '';
                                             
-			$path = "./uploads/files/";
+			$path = "./uploads";
 			if (!is_dir($path)) {
-				mkdir($path, 0755, true); // Create directory with 0755 permissions and recursive flag set to true
+				mkdir($path, 0755, true);
 			}
-			$file_name = $_FILES['file']['name'];
+			if(is_dir($path)){
+				$file_name = $_FILES['file']['name'];
 			$random = random19();
 			$makeRandom = hash('sha512', $random.$file_name . date('Y-M-d-H:i:s') . config_item("encryption_key"));
 			$file_name_rename = $makeRandom;
@@ -247,6 +248,11 @@ public $load;
 			$this->session->set_flashdata('success', 'Data berhasil ditambahkan');
 			$this->laporan_bulanan->insert($array);
 			redirect(base_url('certificatereport'));
+			}else{
+			var_dump("Dir Not Found");
+			exit;
+			}
+			
 			
 			// } 
 			
