@@ -12,10 +12,12 @@
         
             <div class="col-sm-12">
             <h5 class="page-header">
+            <?php if ($this->session->userdata('usertypeID') != 1) {?>
             <a href="<?php echo base_url('certificatereport/add_laporan') ?>">
                 <i class="fa fa-plus"></i>
                 Upload Laporan
             </a>
+            <?php }?>
                     </h5>
             <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
