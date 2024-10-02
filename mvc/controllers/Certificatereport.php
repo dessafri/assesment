@@ -188,76 +188,63 @@ public $load;
 		} else {
 			$new_file = '';
                                             
-			$path = "./uploads";
+			$path = "./uploads/files";
 			if (!is_dir($path)) {
 				mkdir($path, 0755, true);
 			}
 			if(is_dir($path)){
 				$file_name = $_FILES['file']['name'];
-			$random = random19();
-			$makeRandom = hash('sha512', $random.$file_name . date('Y-M-d-H:i:s') . config_item("encryption_key"));
-			$file_name_rename = $makeRandom;
-			$explode = explode('.', (string) $file_name);
-			$new_file = $file_name_rename.'.'.end($explode);
-			// dd($new_file);
-			// die;
-			$config['upload_path'] = $path;
-			$config['allowed_types'] = 'pdf|xls|xlsx'; // Hanya izinkan PDF dan Excel
-        	$config['max_size'] = 2048; // Maksimal 2MB
-			$config['file_name'] = $new_file;
-			$this->load->library('upload');
-			$this->upload->initialize($config);
+				$random = random19();
+				$makeRandom = hash('sha512', $random.$file_name . date('Y-M-d-H:i:s') . config_item("encryption_key"));
+				$file_name_rename = $makeRandom;
+				$explode = explode('.', (string) $file_name);
+				$new_file = $file_name_rename.'.'.end($explode);
+				// dd($new_file);
+				// die;
+				$config['upload_path'] = "./uploads/files";
+				$config['allowed_types'] = 'pdf|xls|xlsx';
+				$config['max_size'] = 2048;
+				$config['file_name'] = $new_file;
+				$this->load->library('upload', $config);
 
-				// Manually set the file data for this specific file
-			// $_FILES['single_file']['name'] = $fileAnswer['name'][$typeID][$questionID];
-			// $_FILES['single_file']['type'] = $fileAnswer['type'][$typeID][$questionID];
-			// $_FILES['single_file']['tmp_name'] = $fileAnswer['tmp_name'][$typeID][$questionID];
-			// $_FILES['single_file']['error'] = $fileAnswer['error'][$typeID][$questionID];
-			// $_FILES['single_file']['size'] = $fileAnswer['size'][$typeID][$questionID];
-
-			if(!$this->upload->do_upload("file")) {
-				log_message('error', $this->upload->display_errors()); // Log the error message for debugging
-				redirect(base_url('certificatereport/add_laporan'));
-				// dd(log_message('error', $this->upload->display_errors()));
-			}
-			// }else{
-			// dd($file_name_rename );
-			$this->upload->data();
-			$this->db->select('*'); // Specify columns you need, or leave '*' to get all
-			$this->db->from('student'); // Query the 'online_exam' table
-			$this->db->where('studentID', $this->session->userdata('loginuserID')); // Filter by 'parentID'
-			
-			$secondQuery = $this->db->get();
-			$dataresultpertanyaan = [];
-			if ($secondQuery->num_rows() > 0) {
-				$dataresultpertanyaan = $secondQuery->result(); // Store the result as an array of objects
-			}
-			$now = new DateTime();
-			// dd($dataresultpertanyaan[0]->parentID);
-			
-			$array = [
-				'name' => $name,
-				'parent_id' => $dataresultpertanyaan[0]->parentID,
-				'file' => $new_file,
-				'create_userID' => $this->session->userdata('loginuserID'),
-				'create_usertypeID' => $dataresultpertanyaan[0]->usertypeID,
-				'original_name' => $file_name,
-				'date' => $now->format('Y-m-d')
-			];
-			// dd($dataresultpertanyaan);
-			$this->session->set_flashdata('success', 'Data berhasil ditambahkan');
-			$this->laporan_bulanan->insert($array);
-			redirect(base_url('certificatereport'));
+				if(!$this->upload->do_upload("file")) {
+					$error = $this->upload->display_errors();
+					$this->session->set_flashdata('error', 'Data Gagal ditambahkan: ' . $error);
+					log_message('error', $this->upload->display_errors());
+					redirect(base_url('certificatereport/add_laporan'));
+				}
+				// }else{
+				// dd($file_name_rename );
+				$this->upload->data();
+				$this->db->select('*'); // Specify columns you need, or leave '*' to get all
+				$this->db->from('student'); // Query the 'online_exam' table
+				$this->db->where('studentID', $this->session->userdata('loginuserID')); // Filter by 'parentID'
+				
+				$secondQuery = $this->db->get();
+				$dataresultpertanyaan = [];
+				if ($secondQuery->num_rows() > 0) {
+					$dataresultpertanyaan = $secondQuery->result(); // Store the result as an array of objects
+				}
+				$now = new DateTime();
+				
+				$array = [
+					'name' => $name,
+					'parent_id' => $dataresultpertanyaan[0]->parentID,
+					'file' => $new_file,
+					'create_userID' => $this->session->userdata('loginuserID'),
+					'create_usertypeID' => $dataresultpertanyaan[0]->usertypeID,
+					'original_name' => $file_name,
+					'date' => $now->format('Y-m-d')
+				];
+				// dd($dataresultpertanyaan);
+				$this->session->set_flashdata('success', 'Data berhasil ditambahkan');
+				$this->laporan_bulanan->insert($array);
+				redirect(base_url('certificatereport'));
 			}else{
-			var_dump("Dir Not Found");
-			exit;
+				$this->session->set_flashdata('error', 'Folder Not Found');
+				redirect(base_url('certificatereport'));
+
 			}
-			
-			
-			// } 
-			
-			// $this->session->set_flashdata('success', 'Sukses');		
-			
 		}
 	}
 
