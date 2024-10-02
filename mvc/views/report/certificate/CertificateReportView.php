@@ -21,7 +21,7 @@
                 <thead>
                     <tr>
                         <th width="2%">No</th>
-                        <th>Parent</th>
+                        <th>Responsible</th>
                         <th width="20%">Nama</th>
                         <th width="30%">File Name</th>
                         <th> Status </th>
