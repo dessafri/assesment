@@ -47,6 +47,9 @@
                                     <label class="lb-content" style="font-weight: bold; font-size: 1.5em;"><?= $entry->nameresult ?></label>
                                 </div>
                         
+                                <label class="lb-content" style="font-weight: bold; font-size: 1.5em;">Total Assessment
+                                            <?= count($entry->detail_soal) ?>
+                                        </label>
                                 <?php
                                 // Loop through each 'detail_soal' (questions)
                                 foreach ($entry->detail_soal as $index => $question) {
@@ -59,12 +62,8 @@
                                     $optionCount = $question->totalOption;
                                     ?>
                                     <div class="question-body">
-                                        <label class="lb-title">Pertanyaan
-                                            <?= $index + 1 ?> dari
-                                            <?= count($entry->detail_soal) ?>
-                                        </label>
                                         <label class="lb-content"><?= $question->question ?></label>
-                                        <label class="lb-mark">
+                                        <label class="lb-mark" style="font-weight: bold; font-size: 1.5em;">
                                             <?= $question->mark != "" ? $question->mark . ' ' . $this->lang->line('take_exam_mark') : '' ?>
                                         </label>
                                         <?php if ($question->upload != '') { ?>
