@@ -177,17 +177,16 @@
                         template +=`</tr><tr><td colspan='10'></td></tr>`;
                     });
                 });
-                template += `</table>`
+                template += `
+                    
+                </table>`
 
-                if(!verif){
-                    template += `
-                    <div class='row' style='margin-bottom:20px'>
-                        <div class='col text-right'>
-                            <button class="btn btn-success" style='margin-right:15px;margin-top:20px' data-status='${val.status_id}' data-group='${val.group_id}' data-index='${idx}-${val.level_report_id}'>Verifikasi</button>
-                        </div>
-                    </div>`;
-                }
-                template +='</div>'
+                template += `
+                <div class='row'>
+                    <div class='col text-right'>
+                        <button class="btn btn-success" style='margin-right:15px;margin-top:20px' data-status='${val.status_id}' data-group='${val.group_id}' data-index='${idx}-${val.level_report_id}'>Verifikasi</button>
+                    </div>
+                </div>`;
             });
 
             return template;

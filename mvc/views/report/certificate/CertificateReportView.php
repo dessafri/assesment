@@ -19,7 +19,38 @@
             </a>
             <?php }?>
                     </h5>
+            <?php if ($this->session->userdata('usertypeID') == 1) { ?>
             <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
+                <thead>
+                    <tr>
+                        <th width="2%">#</th>
+                        <th width="70%">Rsponsible</th>
+                        <th width="2%"> Action </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    $i = 1; foreach($data_sudent as $key => $report) {
+                    ?>
+                        <tr>
+                            <!-- <td class="hidden"><?=$key?></td> -->
+                            <td data-title="id"><?php echo $i; ?></td>
+                            <td data-title="namaKaryawan"><?=$report->name?></td>
+                             <td>
+                                <!-- <a href="<?= base_url('certificatereport/update_status/' . strval($report->id))?>" class="fa fa-eye" >Verifikasi</a> -->
+                                 <button class="btn btn-primary showDetails" id="fufu<?= $report->studentID ?>"><i class="fa fa-bars"></i></button>
+                                
+                            </td>
+                            
+                        </tr>
+                    <?php $i++; }
+                     ?>
+                </tbody>
+            </table>
+            
+    <!-- Kondisi pertama: jika usertypeID tidak sama dengan 1 -->
+            <?php } else { ?>
+                <table id="example1" class="table table-striped table-bordered table-hover dataTable no-footer">
                 <thead>
                     <tr>
                         <th width="2%">No</th>
@@ -28,7 +59,7 @@
                         <th width="30%">File Name</th>
                         <th> Status </th>
                         <th> Date </th>
-                        <th >Action</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -69,6 +100,9 @@
                      ?>
                 </tbody>
             </table>
+                <!-- Kondisi kedua: jika usertypeID sama dengan 1 -->
+            <?php } ?>
+            
             
                 <!-- <div class="form-group col-sm-4" id="classesDiv">
                     <label><?=$this->lang->line("certificatereport_class")?></label><span class="text-red">*</span>
@@ -181,38 +215,28 @@
     });
 </script>
 <script>
+    
     $(document).ready(function () {
-        var reports = <?php echo json_encode($reports)?>;
+        var reports = <?php echo $data_sudent ?>;
+        var data_sudent = <?php echo $data_sudent?>;
         var parentTable = $('#example1').DataTable({
             dom: 'Bfrtip',
             buttons: [
-                {
-                    extend: 'excelHtml5',
-                    exportOptions: {
-                        columns: ':visible'
-                    }
-                },
-                {
-                    extend: 'csvHtml5',
-                    exportOptions: {
-                        columns: ':visible',
-                        format: {
-                        body: function(data, row, column, node) {
-                            // Customize data formatting
-                            // Example: Remove HTML tags and trim spaces
-                            return data.replace(/<.*?>/g, '').trim();
-                        }
-                    }
-                    }
-                },
-                {
-                    extend: 'pdfHtml5',
-                    exportOptions: {
-                        columns: ':visible'
-                    }
-                }
+                
+                
+                // {
+                //     extend: 'pdfHtml5',
+                //     exportOptions: {
+                //         columns: ':visible'
+                //     }
+                // }
             ],
         });
+        // $.each(reports, function(key, value) {
+        //     $(document).on('click', '#fufu', function() {
+        //         console.log("Key: " + key + ", Value: " + value.name);
+        //     });
+        // });
         // $('#example1 tbody').on('click', '.showDetails', function() {
         //         var tr = $(this).closest('tr');
         //         var row = parentTable.row(tr);
@@ -230,6 +254,121 @@
             
     });
         
+</script>
+
+<script>
+    var student = <?php echo json_encode($data_sudent) ?>;
+    // $(document).ready(function() {
+    //     console.log(student);
+    // });
+    $.each(student, function(key, value) {
+        $("#fufu" + value.studentID).click(function() {
+            $.ajax({
+                url: `<?= base_url("certificatereport/get_bulan/") ?>${value.studentID}`,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    // console.log(data);
+                    $.each(data, function(key, vals) {
+                        var uniq = vals.student_id + vals.month + vals.year;
+                        var detailRow = $('#detail' + uniq);
+                        // var detailview = $('#fafa' + uniq);
+                        if (detailRow.length === 0) {
+                            var detailContent = `<tr id="detail${uniq}">
+                            <td colspan="2"><h5><strong>Laporan Bulan ${vals.bulan_nama}  ${vals.year}</strong></h5></td>
+                            <td><button class="btn btn-primary showDetails" id="fafa${uniq}"><i class="fa fa-eye" aria-hidden="true"></i></button></td>
+                            </tr>`;
+                            $('#fufu' + vals.student_id).closest('tr').after(detailContent);
+                            $("#fafa" + uniq).click(function() {
+                                console.log('test fafa')
+                                var uniq2 =  $('#list_user' + uniq);
+                                if (uniq2.length === 0) {
+                                    var content_list = `
+                                        <tr id="list_user${uniq}">
+                                            <td colspan="3">
+                                                <div style="width: 100%" class='box' style='margin-bottom:20px'>
+                                                    <div class='box-body'>
+                                                        <table class="table table-striped table-bordered table-hover dataTable no-footer">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th width="2%">No</th>
+                                                                    <th>Responsible</th>
+                                                                    <th width="20%">Nama</th>
+                                                                    <th width="30%">File Name</th>
+                                                                    <th> Status </th>
+                                                                    <th> Date </th>
+                                                                    <th >Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody id="body${uniq}">
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            
+                                        </tr>`;
+                                    // console.log(vals.student_id);
+                                    $.ajax({
+                                        url: `<?= base_url("certificatereport/get_student_by_period") ?>`,
+                                        type: 'POST',
+                                        data: {
+                                            student_id : Number(vals.student_id),
+                                            month : vals.month,
+                                            year : vals.year, 
+                                        },
+                                        dataType: 'json',
+                                        success: function(response) {
+                                            $.each(response, function(key, valss) {
+                                                // console.log(valss);
+                                                var state = '';
+                                                if (valss.is_verified == 1)
+                                                {
+                                                    state = 'Verified';
+                                                }
+                                                else{
+                                                    state = 'Not Verified';
+                                                }
+                                                var body = '';
+                                                $('#body' + uniq).append
+                                                body += `
+                                                    <tr>
+                                                        <td>${key + 1}</td>
+                                                        <td>${valss.s_name}</td>
+                                                        <td>${valss.name}</td>
+                                                        <td>${valss.oridinal_name}</td>
+                                                        <td>${state}</td>
+                                                        <td>${valss.date}</td>
+                                                    </tr>
+                                                `;
+                                                $('#body' + uniq).append(body);
+                                            });
+                                            
+                                        },
+                                        error:function(){
+                                            console.log('error retrive data');
+                                        }
+                                    });
+                                    $('#detail' + uniq).closest('tr').after(content_list);
+                                }else{
+                                    uniq2.remove();
+                                }
+                            });
+                        } else {
+                            detailRow.remove();
+                            // detailview.remove();
+                        }
+                    });
+                    
+                },
+                error: function() {
+                    console.log('error retrive data');
+                }
+            });
+        
+        });
+    });
+    
 </script>
 
 <script type="text/javascript">

@@ -54,29 +54,27 @@ public $load;
 				'assets/select2/select2.js'
 			)
 		);
-		// if($_POST !== []) {
-		// 	$this->form_validation->set_rules('name', 'Name', 'required');
-            
-        //     // Validasi untuk file (memastikan bahwa file sudah dipilih)
-        //     if (empty($_FILES['file']['name'])) {
-        //         $this->form_validation->set_rules('file', 'File', 'required');
-        //     }
-
-        //     // Jika validasi gagal
-        //     if ($this->form_validation->run() == FALSE) {
-		// 		// $this->session->set_flashdata('error', 'Gagal');
-        //         redirect(base_url('certificatereport'));
-		// 	} else {
-		// 		// $this->session->set_flashdata('success', 'Sukses');		
-		// 		redirect(base_url('certificatereport'));
-		// 	}
-		// }
-		
-		// dd($dataresultpertanyaan);
 		$dataresultpertanyaan = null; // Initialize variable
 		$result = [];
 		$laps = [];
 		if ($this->session->userdata('usertypeID') == 1){
+			$this->db->select('*');
+			$this->db->from('student');
+			$sudent = $this->db->get();
+			$data_sudent = [];
+			if ($sudent->num_rows() > 0) {
+				$data_sudent = $sudent->result();
+			};
+
+			$this->db->select('MONTH(date) as month');
+			$this->db->from('laporan_bulanan');
+			$this->db->group_by('MONTH(date)');
+			$bulan = $this->db->get();
+			$data_bulan = [];
+			if ($bulan->num_rows() > 0) {
+				$data_bulan = $bulan->result();
+			};
+			
 			$this->db->select('laporan_bulanan.*, student.name as p_name'); // Replace '*' with the specific columns you need
 			$this->db->from('laporan_bulanan'); // Replace 'users' with your table name
 			$this->db->join('student', 'student.studentID = laporan_bulanan.create_userID','left'); // Replace 'users' with your table name
@@ -114,9 +112,12 @@ public $load;
 			// dd($laps);
 		}
 		// dd($this->session->userdata());
-		// dd($result);
+		// dd($data_bulan);
+		$this->data['data_bulan'] = $data_bulan;
 		$this->data['datas'] = $result;
 		$this->data['subresult'] = $laps;
+		$this->data['data_sudent'] = $data_sudent;
+
 		
 		$this->data['classes'] = $this->classes_m->get_classes();		
 		$this->data['templates'] = $this->certificate_template_m->get_certificate_template();
@@ -130,6 +131,69 @@ public $load;
 		// $this->data['templates'] = $this->certificate_template_m->get_certificate_template();
 		$this->data["subview"] = "report/certificate/create_certificate";
 		$this->load->view('_layout_main', $this->data);
+	}
+
+	public function get_student_by_period()
+	{
+		$student = $this->input->post('student_id');
+		$month = $this->input->post('month');
+		$year = $this->input->post('year');
+		$this->db->select('laporan_bulanan.*, student.name as s_name');
+		$this->db->from('laporan_bulanan');
+		$this->db->join('student','student.studentID = laporan_bulanan.create_userID','left');
+		$this->db->where('laporan_bulanan.create_userID', $student);
+		$this->db->where('MONTH(laporan_bulanan.date)', $month);
+		$this->db->where('YEAR(laporan_bulanan.date)', $year); 
+		$laporan = $this->db->get();
+		$list_laporan = [];
+		if (inicompute($laporan) > 0) {
+			$list_laporan = $laporan->result();
+		}
+		echo json_encode($list_laporan);
+	}
+
+	public function get_bulan($student_id)
+	{
+		// $student_id = $this->input->post('student_id');
+		$this->db->select('YEAR(date) as year, MONTH(date) as month, create_userID as student_id');
+		$this->db->from('laporan_bulanan');
+		$this->db->where('create_userID', $student_id);
+		$this->db->group_by('YEAR(date), MONTH(date)'); // Mengelompokkan berdasarkan tahun dan bulan
+		$bulan = $this->db->get();
+		$data_bulan = [];
+		if ($bulan->num_rows() > 0) {
+			$result = $bulan->result();
+			$bulan_nama = [
+				1 => 'Januari',
+				2 => 'Februari',
+				3 => 'Maret',
+				4 => 'April',
+				5 => 'Mei',
+				6 => 'Juni',
+				7 => 'Juli',
+				8 => 'Agustus',
+				9 => 'September',
+				10 => 'Oktober',
+				11 => 'November',
+				12 => 'Desember'
+			];
+			foreach ($result as $row) {
+				$data_bulan[] = [
+					'bulan_nama' => $bulan_nama[$row->month], // Mengganti angka bulan dengan nama bulan
+					'month' => $row->month, // Mengganti angka bulan dengan nama bulan
+					'year' => $row->year, // Mengganti angka bulan dengan nama bulan
+					'student_id' => $row->student_id
+				];
+			}
+		};
+		
+		if (!empty($data_bulan)) {
+            // Mengembalikan data sebagai JSON
+            echo json_encode($data_bulan);
+        } else {
+            // Mengembalikan response kosong atau pesan kesalahan
+            echo json_encode(['message' => 'Data not found']);
+        }
 	}
 
 	public function update_status($id)
