@@ -1,11 +1,11 @@
         <!-- header logo: style can be found in header.less -->
         <header class="header">
-            <a href="<?=base_url('dashboard/index'); ?>" class="logo">
+            <a href="<?=base_url('dashboard/index'); ?>" class="logo" style="background-color: #1A2229;">
                 <!-- <?php if(inicompute($siteinfos)) { echo namesorting($siteinfos->sname, 14); } ?> -->
                  <img src="<?php echo base_url('assets/images/logo_kejaksaan.png'); ?>" alt="Deskripsi Gambar" width="50" height="50" style="margin:auto;display:block;"> 
             </a>
             <!-- Header Navbar: style can be found in header.less -->
-            <nav class="navbar navbar-static-top" role="navigation">
+            <nav class="navbar navbar-static-top" role="navigation" style="background-color: #FFFFFF;">
                 <!-- Sidebar toggle button-->
                 <a href="#" class="navbar-btn sidebar-toggle" data-toggle="offcanvas" role="button">
                     <span class="sr-only">Toggle navigation</span>

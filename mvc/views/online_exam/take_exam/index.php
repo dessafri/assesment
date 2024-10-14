@@ -1,10 +1,10 @@
 
 <div class="box">
     <div class="box-header">
-        <h3 class="box-title"><i class="fa fa-user-secret"></i> <?=$this->lang->line('panel_title')?></h3>
+        <h3 class="box-title"><i class="fa fa-user-secret"></i> Daftar Assessment</h3>
         <ol class="breadcrumb">
             <li><a href="<?=base_url("dashboard/index")?>"><i class="fa fa-laptop"></i> <?=$this->lang->line('menu_dashboard')?></a></li>
-            <li class="active"><?=$this->lang->line('panel_title')?></li>
+            <li class="active">Daftar Assessment</li>
         </ol>
     </div><!-- /.box-header -->
     <!-- form start -->
@@ -13,7 +13,7 @@
             <div class="col-sm-12">
             <div class="nav-tabs-custom">
                 <ul class="nav nav-tabs">
-                    <li class="active"><a data-toggle="tab" href="#tab1" aria-expanded="true">Soal</a></li>
+                    <li class="active"><a data-toggle="tab" href="#tab1" aria-expanded="true"></a></li>
                 </ul>
                 <?php
                                             $paidStatus = 0;
@@ -49,7 +49,7 @@
                         <div class="row">
                             <?php foreach ($pertanyaan as $row): ?>
                                 <div class="col-md-6 col">
-                                        <div class="panel panel-default" style="background-color: #dd4b39">
+                                        <div class="panel panel-default" style="background-color: #4A4947">
                                             <div class="panel-body">
                                                 <h5 class="panel-title" style="margin-bottom: 40px; color: white;"><?php echo $row->name; ?></h5>
                                                 <?php
@@ -57,9 +57,9 @@
                                                     $url = base_url('take_exam/instruction/' . $row->onlineExamID . '/' . $row->studentID);
                                                     $paidStatus = htmlspecialchars($paidStatus, ENT_QUOTES, 'UTF-8');
                                                     $onlineExamID = htmlspecialchars($row->onlineExamID, ENT_QUOTES, 'UTF-8');
-                                                    echo "<button onclick=\"newPopup('$url', '$paidStatus', '$onlineExamID','$row->studentID')\" class=\"btn btn-warning\"><i class=\"fa fa-pencil\"></i> Nilai</button>";
+                                                    echo "<button onclick=\"newPopup('$url', '$paidStatus', '$onlineExamID','$row->studentID')\" class=\"btn btn-primary\"><i class=\"fa fa-pencil\"></i> Jawab Assessment</button>";
                                                 } else {
-                                                    echo "<button class='btn btn-disabled' disabled><i class='fa fa-pencil'></i> Nilai</button>";
+                                                    echo "<button class='btn btn-disabled' disabled><i class='fa fa-pencil'></i> Jawab Assessment</button>";
                                                 }
                                                 ?>     
                                             </div>
